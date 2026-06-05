@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
   Moon, 
@@ -11,7 +12,8 @@ import {
 } from 'lucide-react';
 import './AdminStyles.css';
 
-const TopBar = ({ setView }) => {
+const TopBar = () => {
+  const navigate = useNavigate();
   return (
     <div className="admin-topbar">
       <div className="topbar-left">
@@ -25,7 +27,7 @@ const TopBar = ({ setView }) => {
         <div className="topbar-actions">
           {/* Direct client storefront shortcut */}
           <button 
-            onClick={() => setView('store')}
+            onClick={() => navigate('/')}
             title="Switch to Client Storefront"
             style={{ 
               display: 'flex', 

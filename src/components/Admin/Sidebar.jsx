@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   ShoppingBag, 
   Layers, 
@@ -9,7 +10,7 @@ import {
 } from 'lucide-react';
 import './AdminStyles.css';
 
-const SidebarItem = ({ icon: Icon, label, active, hasSubmenu, isOpen, onClick }) => {
+const SidebarItem = ({ icon: Icon, label, active, onClick }) => {
   return (
     <div className={`sidebar-item ${active ? 'active' : ''}`} onClick={onClick}>
       <div className="sidebar-item-content">
@@ -20,7 +21,8 @@ const SidebarItem = ({ icon: Icon, label, active, hasSubmenu, isOpen, onClick })
   );
 };
 
-const Sidebar = ({ activeTab, setActiveTab, setView }) => {
+const Sidebar = ({ activeTab, setActiveTab }) => {
+  const navigate = useNavigate();
   return (
     <div className="admin-sidebar">
       <div className="sidebar-header">
@@ -64,7 +66,7 @@ const Sidebar = ({ activeTab, setActiveTab, setView }) => {
           icon={Eye} 
           label="View Store" 
           active={false} 
-          onClick={() => setView('store')}
+          onClick={() => navigate('/')}
         />
       </div>
     </div>

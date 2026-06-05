@@ -112,7 +112,7 @@ const ProductManagement = () => {
     setFormData({ ...formData, color: formData.color.filter(item => item !== c) });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const data = new FormData();
     Object.keys(formData).forEach(key => {
@@ -125,12 +125,19 @@ const ProductManagement = () => {
       }
     });
 
-    if (editingProduct) {
-      dispatch(updateProduct({ id: editingProduct._id, formData: data }));
-    } else {
-      dispatch(createProduct(data));
+    try {
+      if (editingProduct) {
+        await dispatch(updateProduct({ id: editingProduct._id, formData: data })).unwrap();
+        alert('Product updated successfully!');
+      } else {
+        await dispatch(createProduct(data)).unwrap();
+        alert('Product created successfully!');
+      }
+      handleCloseModal();
+    } catch (error) {
+      alert('Error saving product: ' + (error.message || 'Unknown error'));
+      console.error(error);
     }
-    handleCloseModal();
   };
 
   const handleDelete = (id) => {
@@ -142,6 +149,9 @@ const ProductManagement = () => {
   const filteredProducts = products.filter(p => 
     p.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const selectedCategoryObj = (categories || []).find(c => c._id === formData.catid);
+  const availableSubcategories = selectedCategoryObj?.subcategories || [];
 
   return (
     <div className="product-management">
@@ -216,7 +226,7 @@ const ProductManagement = () => {
               <label>Category</label>
               <select name="catid" value={formData.catid} onChange={handleInputChange} required>
                 <option value="">Select Category</option>
-                {categories.map(cat => <option key={cat._id} value={cat._id}>{cat.name}</option>)}
+                {(categories || []).map(cat => <option key={cat._id} value={cat._id}>{cat.name}</option>)}
               </select>
             </div>
           </div>
@@ -224,6 +234,28 @@ const ProductManagement = () => {
           <div className="form-group">
             <label>Description</label>
             <textarea name="description" value={formData.description} onChange={handleInputChange} required />
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>Subcategory (Product Type)</label>
+              {availableSubcategories.length > 0 ? (
+                <select name="ptype" value={formData.ptype} onChange={handleInputChange} required>
+                  <option value="">Select Subcategory</option>
+                  {availableSubcategories.map(sub => <option key={sub} value={sub}>{sub}</option>)}
+                </select>
+              ) : (
+                <input 
+                  type="text" 
+                  name="ptype" 
+                  value={formData.ptype} 
+                  onChange={handleInputChange} 
+                  placeholder={!formData.catid ? "Select Category first" : "e.g. Simple, Variable"} 
+                  disabled={!formData.catid}
+                  required 
+                />
+              )}
+            </div>
           </div>
 
           <div className="form-row">
@@ -241,12 +273,7 @@ const ProductManagement = () => {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Product Type</label>
-              <input type="text" name="ptype" value={formData.ptype} onChange={handleInputChange} placeholder="e.g. Simple, Variable" required />
-            </div>
-          </div>
+
 
           <div className="form-row">
             <div className="form-group">
@@ -276,7 +303,7 @@ const ProductManagement = () => {
           </div>
 
           <div className="form-group">
-            <label>Images (Min 3 required)</label>
+            <label>Images (Min 1 required)</label>
             <div className="file-input-container">
               <input type="file" id="product-images" onChange={handleFileChange} accept="image/*" multiple hidden />
               <label htmlFor="product-images" className="file-input-label">

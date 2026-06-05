@@ -10,7 +10,8 @@ const CategoryManagement = () => {
   const { items: categories, loading } = useSelector((state) => state.category);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
-  const [formData, setFormData] = useState({ name: '', image: null });
+  const [formData, setFormData] = useState({ name: '', image: null, subcategories: [] });
+  const [subcatInput, setSubcatInput] = useState('');
   const [preview, setPreview] = useState('');
 
   useEffect(() => {
@@ -20,11 +21,11 @@ const CategoryManagement = () => {
   const handleOpenModal = (category = null) => {
     if (category) {
       setEditingCategory(category);
-      setFormData({ name: category.name, image: null });
+      setFormData({ name: category.name, image: null, subcategories: category.subcategories || [] });
       setPreview(category.imageUrl);
     } else {
       setEditingCategory(null);
-      setFormData({ name: '', image: null });
+      setFormData({ name: '', image: null, subcategories: [] });
       setPreview('');
     }
     setIsModalOpen(true);
@@ -33,13 +34,25 @@ const CategoryManagement = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingCategory(null);
-    setFormData({ name: '', image: null });
+    setFormData({ name: '', image: null, subcategories: [] });
     setPreview('');
+    setSubcatInput('');
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  const handleAddSubcat = () => {
+    if (subcatInput.trim() && !formData.subcategories.includes(subcatInput.trim())) {
+      setFormData({ ...formData, subcategories: [...formData.subcategories, subcatInput.trim()] });
+      setSubcatInput('');
+    }
+  };
+
+  const handleRemoveSubcat = (subcat) => {
+    setFormData({ ...formData, subcategories: formData.subcategories.filter(s => s !== subcat) });
   };
 
   const handleFileChange = (e) => {
@@ -50,20 +63,28 @@ const CategoryManagement = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const data = new FormData();
     data.append('name', formData.name);
     if (formData.image) {
       data.append('image', formData.image);
     }
+    data.append('subcategories', JSON.stringify(formData.subcategories));
 
-    if (editingCategory) {
-      dispatch(updateCategory({ id: editingCategory._id, formData: data }));
-    } else {
-      dispatch(createCategory(data));
+    try {
+      if (editingCategory) {
+        await dispatch(updateCategory({ id: editingCategory._id, formData: data })).unwrap();
+        alert('Category updated successfully!');
+      } else {
+        await dispatch(createCategory(data)).unwrap();
+        alert('Category created successfully!');
+      }
+      handleCloseModal();
+    } catch (error) {
+      alert('Error saving category: ' + (typeof error === 'string' ? error : error.message || 'Unknown error'));
+      console.error(error);
     }
-    handleCloseModal();
   };
 
   const handleDelete = (id) => {
@@ -96,7 +117,10 @@ const CategoryManagement = () => {
                   <td>
                     <div className="table-product-info">
                       <img src={cat.imageUrl} alt={cat.name} className="table-img" style={{ width: '50px', height: '50px', borderRadius: '8px' }} />
-                      <span className="category-name">{cat.name}</span>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span className="category-name">{cat.name}</span>
+                        <span style={{ fontSize: '12px', color: 'gray' }}>{(cat.subcategories || []).join(', ')}</span>
+                      </div>
                     </div>
                   </td>
                   <td>
@@ -128,6 +152,28 @@ const CategoryManagement = () => {
               placeholder="Enter category name" 
               required 
             />
+          </div>
+          
+          <div className="form-group">
+            <label>Subcategories</label>
+            <div className="tag-input">
+              <input 
+                type="text" 
+                value={subcatInput} 
+                onChange={(e) => setSubcatInput(e.target.value)} 
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSubcat())}
+                placeholder="Type and press Add" 
+              />
+              <button type="button" onClick={handleAddSubcat}>Add</button>
+            </div>
+            <div className="tags-container">
+              {formData.subcategories.map(subcat => (
+                <span key={subcat} className="tag">
+                  {subcat}
+                  <Trash2 size={12} onClick={() => handleRemoveSubcat(subcat)} />
+                </span>
+              ))}
+            </div>
           </div>
           <div className="form-group">
             <label>Category Image</label>

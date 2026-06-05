@@ -9,11 +9,15 @@ export const fetchCategories = createAsyncThunk('category/fetchAll', async () =>
   return response.data.data;
 });
 
-export const createCategory = createAsyncThunk('category/create', async (formData) => {
-  const response = await axios.post(`${API_URL}/create`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
-  return response.data.data;
+export const createCategory = createAsyncThunk('category/create', async (formData, { rejectWithValue }) => {
+  try {
+    const response = await axios.post(`${API_URL}/create`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message);
+  }
 });
 
 export const updateCategory = createAsyncThunk('category/update', async ({ id, formData }) => {
@@ -45,7 +49,7 @@ const categorySlice = createSlice({
       })
       .addCase(fetchCategories.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
+        state.error = action.payload || action.error.message;
       })
       .addCase(createCategory.fulfilled, (state, action) => {
         state.items.push(action.payload);

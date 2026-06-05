@@ -51,7 +51,7 @@ const BannerManagement = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const data = new FormData();
     data.append('title', formData.title);
@@ -60,12 +60,19 @@ const BannerManagement = () => {
       data.append('image', formData.image);
     }
 
-    if (editingBanner) {
-      dispatch(updateBanner({ id: editingBanner._id, formData: data }));
-    } else {
-      dispatch(createBanner(data));
+    try {
+      if (editingBanner) {
+        await dispatch(updateBanner({ id: editingBanner._id, formData: data })).unwrap();
+        alert('Banner updated successfully!');
+      } else {
+        await dispatch(createBanner(data)).unwrap();
+        alert('Banner created successfully!');
+      }
+      handleCloseModal();
+    } catch (error) {
+      alert('Error saving banner: ' + (error.message || 'Unknown error'));
+      console.error(error);
     }
-    handleCloseModal();
   };
 
   const handleDelete = (id) => {

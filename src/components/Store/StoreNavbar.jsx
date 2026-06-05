@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { 
   Search, 
   Heart, 
@@ -8,23 +9,26 @@ import {
 } from 'lucide-react';
 import './StoreStyles.css';
 
-const StoreNavbar = ({ setView, activePage, setActivePage }) => {
+const StoreNavbar = () => {
+  const location = useLocation();
+  const path = location.pathname;
+
   return (
     <header className="store-navbar-wrapper">
       <div className="store-navbar">
         {/* Brand/Logo */}
-        <a className="store-nav-brand" onClick={() => { setView('store'); setActivePage('home'); }}>
+        <Link to="/" className="store-nav-brand">
           <div className="store-brand-dot"></div>
           <span className="store-brand-text">EcoVibe</span>
-        </a>
+        </Link>
 
         {/* Navigation Links */}
         <ul className="store-nav-links">
-          <li><a className={`store-nav-link ${activePage === 'home' ? 'active' : ''}`} onClick={() => setActivePage('home')}>Home</a></li>
-          <li><a className="store-nav-link" onClick={() => setActivePage('home')}>Shop</a></li>
-          <li><a className="store-nav-link" onClick={() => setActivePage('home')}>Categories</a></li>
-          <li><a className={`store-nav-link ${activePage === 'about' ? 'active' : ''}`} onClick={() => setActivePage('about')}>About Us</a></li>
-          <li><a className={`store-nav-link ${activePage === 'contact' ? 'active' : ''}`} onClick={() => setActivePage('contact')}>Contact</a></li>
+          <li><Link to="/" className={`store-nav-link ${path === '/' ? 'active' : ''}`}>Home</Link></li>
+          <li><Link to="/shop" className={`store-nav-link ${path === '/shop' ? 'active' : ''}`}>Shop</Link></li>
+          <li><Link to="/categories" className={`store-nav-link ${path === '/categories' ? 'active' : ''}`}>Categories</Link></li>
+          <li><Link to="/about" className={`store-nav-link ${path === '/about' ? 'active' : ''}`}>About Us</Link></li>
+          <li><Link to="/contact" className={`store-nav-link ${path === '/contact' ? 'active' : ''}`}>Contact</Link></li>
         </ul>
 
         {/* Search Bar */}
@@ -35,29 +39,29 @@ const StoreNavbar = ({ setView, activePage, setActivePage }) => {
 
         {/* Nav Actions */}
         <div className="store-nav-actions">
-          <button className="store-action-btn" title="Favorites">
+          <Link to="/favorites" className="store-action-btn" title="Favorites">
             <Heart size={20} />
             <span className="store-badge">2</span>
-          </button>
+          </Link>
           
-          <button className="store-action-btn" title="Shopping Cart">
+          <Link to="/cart" className="store-action-btn" title="Shopping Cart">
             <ShoppingBag size={20} />
-            <span className="store-badge">3</span>
-          </button>
+            <span className="store-badge">2</span>
+          </Link>
 
-          <button className="store-action-btn" title="Account">
+          <Link to="/account" className="store-action-btn" title="Account">
             <User size={20} />
-          </button>
+          </Link>
 
           {/* Elegant Switch to Admin Panel Toggle */}
-          <button 
+          <Link 
+            to="/admin"
             className="store-admin-toggle-btn"
-            onClick={() => setView('admin')}
             title="Switch to Admin Dashboard"
           >
             <LayoutDashboard size={16} />
             <span>Admin Portal</span>
-          </button>
+          </Link>
         </div>
       </div>
     </header>

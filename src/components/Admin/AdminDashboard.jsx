@@ -7,7 +7,7 @@ import CategoryManagement from './CategoryManagement';
 import BannerManagement from './BannerManagement';
 import './AdminStyles.css';
 
-const AdminDashboard = ({ setView }) => {
+const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
 
   const renderContent = () => {
@@ -28,9 +28,9 @@ const AdminDashboard = ({ setView }) => {
 
   return (
     <div className="admin-container">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} setView={setView} />
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       <div className="admin-main">
-        <TopBar setView={setView} />
+        <TopBar />
         <div className="admin-content">
           {renderContent()}
         </div>

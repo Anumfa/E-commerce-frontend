@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { Routes, Route } from 'react-router-dom';
 import { fetchProducts } from '../../redux/slices/productSlice';
 import { fetchBanners } from '../../redux/slices/bannerSlice';
 import StoreNavbar from './StoreNavbar';
@@ -10,6 +11,11 @@ import ReviewModal from './ReviewModal';
 import StoreFooter from './StoreFooter';
 import ContactPage from './ContactPage';
 import AboutUsPage from './AboutUsPage';
+import ShopPage from './ShopPage';
+import CategoriesPage from './CategoriesPage';
+import AccountPage from './AccountPage';
+import FavoritesPage from './FavoritesPage';
+import CartPage from './CartPage';
 import './StoreStyles.css';
 
 // Premium Fallback Products for "Best Products" (8 items = 2 rows of 4)
@@ -237,13 +243,12 @@ const DEFAULT_REVIEWS = [
   }
 ];
 
-const StoreHome = ({ setView }) => {
+const StoreHome = () => {
   const dispatch = useDispatch();
   const { items: products, loading: productsLoading } = useSelector((state) => state.product);
 
-  const [reviews, setReviews] = useState([]);
-  const [isModalOpen, setModalOpen] = useState(false);
-  const [activePage, setActivePage] = useState('home');
+  const [reviews, setReviews] = React.useState([]);
+  const [isModalOpen, setModalOpen] = React.useState(false);
 
   // Fetch items from backend API on mount
   useEffect(() => {
@@ -321,70 +326,76 @@ const StoreHome = ({ setView }) => {
   return (
     <div className="store-body-wrapper">
       {/* 1. Navbar */}
-      <StoreNavbar setView={setView} activePage={activePage} setActivePage={setActivePage} />
+      <StoreNavbar />
 
-      {activePage === 'home' ? (
-        <>
-          {/* 2. Hero Product Banner Carousel */}
-          <StoreBanner />
+      <Routes>
+        <Route path="/" element={
+          <>
+            {/* 2. Hero Product Banner Carousel */}
+            <StoreBanner />
 
-          {/* 3. Best Products (2 Rows = 8 items) */}
-          <div className="store-section-container">
-            <div className="store-section-header">
-              <div className="store-section-title-area">
-                <span className="store-section-subtitle">Specials</span>
-                <h2 className="store-section-title">Best Selling Products</h2>
-                <div className="store-section-line"></div>
+            {/* 3. Best Products (2 Rows = 8 items) */}
+            <div className="store-section-container">
+              <div className="store-section-header">
+                <div className="store-section-title-area">
+                  <span className="store-section-subtitle">Specials</span>
+                  <h2 className="store-section-title">Best Selling Products</h2>
+                  <div className="store-section-line"></div>
+                </div>
               </div>
+
+              {productsLoading && (!products || products.length === 0) ? (
+                <div className="store-grid-layout">
+                  <div className="store-empty-catalog">Loading hot sales catalog...</div>
+                </div>
+              ) : (
+                <div className="store-grid-layout">
+                  {bestProducts.map((p) => (
+                    <ProductCard key={p._id} product={p} />
+                  ))}
+                </div>
+              )}
             </div>
 
-            {productsLoading && (!products || products.length === 0) ? (
-              <div className="store-grid-layout">
-                <div className="store-empty-catalog">Loading hot sales catalog...</div>
+            {/* 4. Featured Products (2 Rows = 8 items) */}
+            <div className="store-section-container">
+              <div className="store-section-header">
+                <div className="store-section-title-area">
+                  <span className="store-section-subtitle">Curated</span>
+                  <h2 className="store-section-title">Featured Products</h2>
+                  <div className="store-section-line"></div>
+                </div>
               </div>
-            ) : (
-              <div className="store-grid-layout">
-                {bestProducts.map((p) => (
-                  <ProductCard key={p._id} product={p} />
-                ))}
-              </div>
-            )}
-          </div>
 
-          {/* 4. Featured Products (2 Rows = 8 items) */}
-          <div className="store-section-container">
-            <div className="store-section-header">
-              <div className="store-section-title-area">
-                <span className="store-section-subtitle">Curated</span>
-                <h2 className="store-section-title">Featured Products</h2>
-                <div className="store-section-line"></div>
-              </div>
+              {productsLoading && (!products || products.length === 0) ? (
+                <div className="store-grid-layout">
+                  <div className="store-empty-catalog">Loading curated list...</div>
+                </div>
+              ) : (
+                <div className="store-grid-layout">
+                  {featuredProducts.map((p) => (
+                    <ProductCard key={p._id} product={p} />
+                  ))}
+                </div>
+              )}
             </div>
 
-            {productsLoading && (!products || products.length === 0) ? (
-              <div className="store-grid-layout">
-                <div className="store-empty-catalog">Loading curated list...</div>
-              </div>
-            ) : (
-              <div className="store-grid-layout">
-                {featuredProducts.map((p) => (
-                  <ProductCard key={p._id} product={p} />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* 5. User Reviews Section */}
-          <ReviewsSection 
-            reviews={reviews} 
-            onWriteReviewClick={() => setModalOpen(true)} 
-          />
-        </>
-      ) : activePage === 'contact' ? (
-        <ContactPage />
-      ) : (
-        <AboutUsPage />
-      )}
+            {/* 5. User Reviews Section */}
+            <ReviewsSection 
+              reviews={reviews} 
+              onWriteReviewClick={() => setModalOpen(true)} 
+            />
+          </>
+        } />
+        
+        <Route path="/shop" element={<ShopPage />} />
+        <Route path="/categories" element={<CategoriesPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/about" element={<AboutUsPage />} />
+        <Route path="/account" element={<AccountPage />} />
+        <Route path="/favorites" element={<FavoritesPage />} />
+        <Route path="/cart" element={<CartPage />} />
+      </Routes>
 
       {/* 6. Footer Section */}
       <StoreFooter />
