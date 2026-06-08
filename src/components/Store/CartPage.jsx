@@ -1,15 +1,14 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
-import { Trash2, Plus, Minus, ArrowRight } from 'lucide-react';
+import { useSelector, useDispatch } from 'react-redux';
+import { Link, useNavigate } from 'react-router-dom';
+import { Trash2, Plus, Minus, ArrowRight, ArrowLeft } from 'lucide-react';
+import { updateQuantity, removeFromCart } from '../../redux/slices/cartSlice';
 import './StoreStyles.css';
 
 const CartPage = () => {
-  // Mock cart items until connected to cartSlice
-  const { items: products } = useSelector((state) => state.product);
-  const cartItems = products && products.length >= 2 ? [
-    { product: products[0], quantity: 1, selectedSize: 'M', selectedColor: '#000000' },
-    { product: products[1], quantity: 2, selectedSize: 'L', selectedColor: '#ff0000' }
-  ] : [];
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const cartItems = useSelector((state) => state.cart.items);
 
   const subtotal = cartItems.reduce((acc, item) => acc + (item.product.discountprice || item.product.price) * item.quantity, 0);
 
@@ -45,13 +44,23 @@ const CartPage = () => {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #ddd', borderRadius: '8px', overflow: 'hidden' }}>
-                      <button style={{ padding: '8px 12px', border: 'none', background: '#f9f9f9', cursor: 'pointer' }}><Minus size={14} /></button>
+                      <button 
+                        onClick={() => dispatch(updateQuantity({ ...item, productId: item.product._id, quantity: Math.max(1, item.quantity - 1) }))}
+                        style={{ padding: '8px 12px', border: 'none', background: '#f9f9f9', cursor: 'pointer' }}
+                      ><Minus size={14} /></button>
                       <span style={{ padding: '0 16px', fontSize: '14px', fontWeight: '600' }}>{item.quantity}</span>
-                      <button style={{ padding: '8px 12px', border: 'none', background: '#f9f9f9', cursor: 'pointer' }}><Plus size={14} /></button>
+                      <button 
+                        onClick={() => dispatch(updateQuantity({ ...item, productId: item.product._id, quantity: item.quantity + 1 }))}
+                        style={{ padding: '8px 12px', border: 'none', background: '#f9f9f9', cursor: 'pointer' }}
+                      ><Plus size={14} /></button>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                       <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#d97706' }}>${(item.product.discountprice || item.product.price) * item.quantity}</span>
-                      <button style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Remove Item">
+                      <button 
+                        onClick={() => dispatch(removeFromCart({ ...item, productId: item.product._id }))}
+                        style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                        title="Remove Item"
+                      >
                         <Trash2 size={18} />
                       </button>
                     </div>
@@ -85,9 +94,23 @@ const CartPage = () => {
               <span style={{ fontWeight: '800', color: '#d97706' }}>${subtotal}</span>
             </div>
             
-            <button className="store-btn" style={{ width: '100%', padding: '16px', backgroundColor: '#d97706', color: 'white', border: 'none', borderRadius: '10px', fontSize: '16px', fontWeight: 'bold', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-              Proceed to Checkout <ArrowRight size={18} />
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <button 
+                onClick={() => navigate('/checkout')}
+                className="store-btn" 
+                style={{ width: '100%', padding: '16px', backgroundColor: '#d97706', color: 'white', border: 'none', borderRadius: '10px', fontSize: '16px', fontWeight: 'bold', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+              >
+                Proceed to Checkout <ArrowRight size={18} />
+              </button>
+              
+              <button 
+                onClick={() => navigate('/shop')}
+                className="store-btn-outline" 
+                style={{ width: '100%', padding: '16px', backgroundColor: 'transparent', color: '#666', border: '1px solid #ddd', borderRadius: '10px', fontSize: '16px', fontWeight: 'bold', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+              >
+                <ArrowLeft size={18} /> Back to Shopping
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -4,10 +4,7 @@ import ProductCard from './ProductCard';
 import './StoreStyles.css';
 
 const FavoritesPage = () => {
-  // In a real app, this would fetch from a wishlistSlice
-  // For now, let's just use the first 4 products as a mock favorites list
-  const { items: products } = useSelector((state) => state.product);
-  const favoriteProducts = products ? products.slice(0, 4) : [];
+  const favoriteProducts = useSelector((state) => state.wishlist.items);
 
   return (
     <div className="store-page-container" style={{ padding: '40px 24px', maxWidth: '1200px', margin: '0 auto', marginTop: '80px', minHeight: '60vh' }}>

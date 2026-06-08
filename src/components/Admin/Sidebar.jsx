@@ -6,7 +6,8 @@ import {
   ChevronRight,
   Image,
   Eye,
-  LayoutDashboard
+  LayoutDashboard,
+  X
 } from 'lucide-react';
 import './AdminStyles.css';
 
@@ -21,19 +22,32 @@ const SidebarItem = ({ icon: Icon, label, active, onClick }) => {
   );
 };
 
-const Sidebar = ({ activeTab, setActiveTab }) => {
+const Sidebar = ({ activeTab, setActiveTab, isSidebarOpen, setIsSidebarOpen }) => {
   const navigate = useNavigate();
   return (
-    <div className="admin-sidebar">
-      <div className="sidebar-header">
+    <>
+      {/* Mobile Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="admin-sidebar-overlay" 
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
+      
+      <div className={`admin-sidebar ${isSidebarOpen ? 'open' : ''}`}>
+        <div className="sidebar-header">
         <div className="logo-container">
           <div className="logo-icon">
             <div className="logo-dot"></div>
           </div>
           <span className="logo-text">Dataflow</span>
         </div>
-        <button className="sidebar-toggle">
-          <ChevronRight size={18} />
+        <button 
+          className="sidebar-toggle" 
+          onClick={() => setIsSidebarOpen(false)}
+        >
+          <X size={18} className="sidebar-close-icon" />
+          <ChevronRight size={18} className="sidebar-collapse-icon" />
         </button>
       </div>
 
@@ -70,6 +84,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
         />
       </div>
     </div>
+    </>
   );
 };
 

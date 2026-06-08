@@ -2509,3 +2509,118 @@
     font-size: 32px;
   }
 }
+
+/* =========================================
+   NEW RESPONSIVE STYLES 
+   ========================================= */
+
+/* Hamburger Menu Toggle Button */
+.store-mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--store-text-main);
+  cursor: pointer;
+  padding: 8px;
+  z-index: 101; /* Above mobile menu */
+}
+
+@media (max-width: 900px) {
+  .store-mobile-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Mobile Navbar Links */
+  .store-nav-links {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    width: 100%;
+    background-color: var(--store-bg);
+    flex-direction: column;
+    padding: 0;
+    height: 0;
+    overflow: hidden;
+    transition: height 0.3s ease-in-out;
+    border-bottom: 1px solid var(--store-border);
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+    z-index: 100;
+  }
+
+  .store-nav-links.mobile-open {
+    height: auto;
+    padding: 20px 0;
+  }
+
+  .store-nav-links li {
+    width: 100%;
+    text-align: center;
+    margin: 10px 0;
+  }
+
+  .store-nav-link {
+    display: block;
+    padding: 10px;
+    font-size: 18px;
+  }
+
+  /* Hide Search bar on mobile to save space, or keep it smaller */
+  .store-nav-search {
+    display: none;
+  }
+
+  /* Footer responsiveness */
+  .store-footer-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  /* Account & Pages containers */
+  .store-page-container {
+    padding: 24px 16px !important;
+  }
+
+  .store-auth-box {
+    padding: 24px !important;
+  }
+
+  /* Checkout page layout */
+  .store-page-container > div[style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 600px) {
+  /* Store Banner scaling */
+  .store-banner-slide {
+    height: 60vh;
+    min-height: 400px;
+  }
+  
+  .store-banner-content h1 {
+    font-size: 32px;
+  }
+
+  /* Grid Layouts - 1 column for phones */
+  .store-grid-layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .shop-container {
+    flex-direction: column;
+  }
+
+  .shop-sidebar {
+    width: 100%;
+    position: static;
+    margin-bottom: 24px;
+  }
+
+  /* Cart page adjustments */
+  .store-page-container > div[style*="gridTemplateColumns"] > div {
+    flex-direction: column !important;
+  }
+}

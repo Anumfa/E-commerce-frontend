@@ -1,8 +1,15 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { Star, Heart, Plus } from 'lucide-react';
+import { addToCart } from '../../redux/slices/cartSlice';
+import { toggleWishlist } from '../../redux/slices/wishlistSlice';
 import './StoreStyles.css';
 
 const ProductCard = ({ product }) => {
+  const dispatch = useDispatch();
+  const wishlistItems = useSelector((state) => state.wishlist.items);
+  const isWishlisted = wishlistItems.some((item) => item._id === product._id);
   const { name, description, price, discount, discountprice, images, ptype } = product;
 
   // Enforce image fallback
@@ -57,12 +64,20 @@ const ProductCard = ({ product }) => {
       )}
 
       {/* Wishlist Icon */}
-      <button className="store-product-wishlist" title="Add to Wishlist">
-        <Heart size={18} />
+      <button 
+        className={`store-product-wishlist ${isWishlisted ? 'active' : ''}`} 
+        title="Add to Wishlist"
+        onClick={(e) => {
+          e.preventDefault();
+          dispatch(toggleWishlist(product));
+        }}
+        style={{ color: isWishlisted ? 'red' : 'currentColor' }}
+      >
+        <Heart size={18} fill={isWishlisted ? 'red' : 'none'} />
       </button>
 
       {/* Product Image Section */}
-      <div className="store-product-img-box">
+      <Link to={`/product/${product._id}`} className="store-product-img-box">
         <img 
           src={displayImage} 
           alt={name} 
@@ -71,7 +86,7 @@ const ProductCard = ({ product }) => {
             e.target.src = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&fit=crop';
           }}
         />
-      </div>
+      </Link>
 
       {/* Details Section */}
       <div className="store-product-details">
@@ -99,7 +114,20 @@ const ProductCard = ({ product }) => {
             )}
           </div>
 
-          <button className="store-cart-action-btn" title="Add to Cart">
+          <button 
+            className="store-cart-action-btn" 
+            title="Add to Cart"
+            onClick={(e) => {
+              e.preventDefault();
+              dispatch(addToCart({ 
+                product, 
+                quantity: 1,
+                selectedColor: 'Black', // Default mock color
+                selectedSize: 'M'       // Default mock size
+              }));
+              alert('Added to Cart!');
+            }}
+          >
             <Plus size={18} />
           </button>
         </div>

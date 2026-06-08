@@ -9,6 +9,7 @@ import './AdminStyles.css';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -25,12 +26,19 @@ const AdminDashboard = () => {
     }
   };
 
-
   return (
     <div className="admin-container">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Sidebar 
+        activeTab={activeTab} 
+        setActiveTab={(tab) => {
+          setActiveTab(tab);
+          setIsSidebarOpen(false); // Close sidebar on mobile when navigating
+        }} 
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+      />
       <div className="admin-main">
-        <TopBar />
+        <TopBar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
         <div className="admin-content">
           {renderContent()}
         </div>

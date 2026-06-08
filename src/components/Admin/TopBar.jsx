@@ -8,15 +8,23 @@ import {
   Maximize, 
   LayoutGrid, 
   ChevronDown,
-  Eye
+  Eye,
+  Menu
 } from 'lucide-react';
 import './AdminStyles.css';
 
-const TopBar = () => {
+const TopBar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const navigate = useNavigate();
   return (
     <div className="admin-topbar">
-      <div className="topbar-left">
+      <div className="topbar-left" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <button 
+          className="admin-mobile-menu-btn"
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          style={{ display: 'none', background: 'none', border: 'none', color: 'var(--admin-text-main)', cursor: 'pointer' }}
+        >
+          <Menu size={24} />
+        </button>
         <div className="search-container">
           <Search size={18} color="var(--admin-text-muted)" />
           <input type="text" placeholder="Search" className="search-input" />

@@ -16,6 +16,9 @@ import CategoriesPage from './CategoriesPage';
 import AccountPage from './AccountPage';
 import FavoritesPage from './FavoritesPage';
 import CartPage from './CartPage';
+import CheckoutPage from './CheckoutPage';
+import OrderConfirmationPage from './OrderConfirmationPage';
+import ProductDetailPage from './ProductDetailPage';
 import './StoreStyles.css';
 
 // Premium Fallback Products for "Best Products" (8 items = 2 rows of 4)
@@ -395,6 +398,9 @@ const StoreHome = () => {
         <Route path="/account" element={<AccountPage />} />
         <Route path="/favorites" element={<FavoritesPage />} />
         <Route path="/cart" element={<CartPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/order-confirmation/:id" element={<OrderConfirmationPage />} />
+        <Route path="/product/:id" element={<ProductDetailPage />} />
       </Routes>
 
       {/* 6. Footer Section */}

@@ -2067,3 +2067,92 @@
 .submit-btn:hover {
   background-color: hsl(28, 48%, 27%);
 }
+
+/* =========================================
+   NEW RESPONSIVE STYLES (ADMIN)
+   ========================================= */
+
+.sidebar-close-icon {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .admin-mobile-menu-btn {
+    display: block !important;
+  }
+
+  .admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: -300px;
+    z-index: 1000;
+    transition: left 0.3s ease-in-out;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+  }
+
+  .admin-sidebar.open {
+    left: 0;
+  }
+
+  .admin-sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 999;
+  }
+
+  .sidebar-collapse-icon {
+    display: none;
+  }
+
+  .sidebar-close-icon {
+    display: block;
+    color: var(--admin-text-main);
+  }
+
+  .search-container {
+    display: none; /* Hide search bar on mobile/tablet to save space */
+  }
+
+  .topbar-right .user-name,
+  .topbar-right .user-role {
+    display: none;
+  }
+
+  /* Grid Adjustments */
+  .revenue-card,
+  .orders-card {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-topbar {
+    padding: 0 16px;
+  }
+
+  .admin-content {
+    padding: 16px;
+  }
+
+  .revenue-stats {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .stat-card {
+    min-width: 100%;
+  }
+
+  .table-container {
+    width: 100%;
+    overflow-x: auto; /* Allow horizontal scroll for data tables */
+  }
+
+  .map-legend {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
