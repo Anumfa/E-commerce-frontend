@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { GoogleLogin } from '@react-oauth/google';
 import './StoreStyles.css';
 
 const AccountPage = () => {
@@ -12,6 +13,27 @@ const AccountPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     alert(isLogin ? 'Login functionality to be connected to backend.' : 'Registration functionality to be connected to backend.');
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const res = await fetch('http://localhost:9000/api/auth/google', { // adjust base URL if needed, or /google directly depending on router
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: credentialResponse.credential })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Google Login Successful!');
+        console.log(data);
+        // Here you would dispatch to Redux or localStorage
+      } else {
+        alert('Google Login Failed: ' + data.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error connecting to backend for Google Login');
+    }
   };
 
   return (
@@ -43,6 +65,16 @@ const AccountPage = () => {
             {isLogin ? 'Sign In' : 'Sign Up'}
           </button>
         </form>
+        
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => {
+              console.log('Login Failed');
+              alert('Google Login Failed');
+            }}
+          />
+        </div>
         
         <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '14px', color: '#666' }}>
           {isLogin ? "Don't have an account? " : "Already have an account? "}
