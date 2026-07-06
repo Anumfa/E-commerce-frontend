@@ -9,18 +9,26 @@ export const fetchBanners = createAsyncThunk('banner/fetchAll', async () => {
   return response.data.data;
 });
 
-export const createBanner = createAsyncThunk('banner/create', async (formData) => {
-  const response = await axios.post(`${API_URL}/create`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
-  return response.data.data;
+export const createBanner = createAsyncThunk('banner/create', async (formData, { rejectWithValue }) => {
+  try {
+    const response = await axios.post(`${API_URL}/create`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message);
+  }
 });
 
-export const updateBanner = createAsyncThunk('banner/update', async ({ id, formData }) => {
-  const response = await axios.put(`${API_URL}/update/${id}`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
-  return response.data.data;
+export const updateBanner = createAsyncThunk('banner/update', async ({ id, formData }, { rejectWithValue }) => {
+  try {
+    const response = await axios.put(`${API_URL}/update/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message);
+  }
 });
 
 export const deleteBanner = createAsyncThunk('banner/delete', async (id) => {

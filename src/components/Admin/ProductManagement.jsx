@@ -135,7 +135,7 @@ const ProductManagement = () => {
       }
       handleCloseModal();
     } catch (error) {
-      alert('Error saving product: ' + (error.message || 'Unknown error'));
+      alert('Error saving product: ' + (typeof error === 'string' ? error : error.message || 'Unknown error'));
       console.error(error);
     }
   };

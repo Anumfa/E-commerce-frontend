@@ -70,7 +70,7 @@ const BannerManagement = () => {
       }
       handleCloseModal();
     } catch (error) {
-      alert('Error saving banner: ' + (error.message || 'Unknown error'));
+      alert('Error saving banner: ' + (typeof error === 'string' ? error : error.message || 'Unknown error'));
       console.error(error);
     }
   };
