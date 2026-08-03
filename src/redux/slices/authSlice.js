@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-const API_URL = 'http://localhost:9000/api/auth'; // Change back to vercel URL for production
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:9000';
+const API_URL = `${API_BASE}/api/auth`;
 
 // Login Thunk
 export const loginUser = createAsyncThunk(
