@@ -1,15 +1,25 @@
 import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import DashboardOverview from './DashboardOverview';
 import ProductManagement from './ProductManagement';
 import CategoryManagement from './CategoryManagement';
 import BannerManagement from './BannerManagement';
+import OrderManagement from './OrderManagement';
+import ReviewManagement from './ReviewManagement';
+import ContactManagement from './ContactManagement';
+import AdminAuthPage from './AdminAuthPage';
 import './AdminStyles.css';
 
 const AdminDashboard = () => {
+  const { isAuthenticated } = useSelector((state) => state.auth);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  if (!isAuthenticated) {
+    return <AdminAuthPage />;
+  }
 
   const renderContent = () => {
     switch (activeTab) {
@@ -21,6 +31,12 @@ const AdminDashboard = () => {
         return <CategoryManagement />;
       case 'banner':
         return <BannerManagement />;
+      case 'orders':
+        return <OrderManagement />;
+      case 'reviews':
+        return <ReviewManagement />;
+      case 'contacts':
+        return <ContactManagement />;
       default:
         return <DashboardOverview />;
     }
@@ -32,7 +48,7 @@ const AdminDashboard = () => {
         activeTab={activeTab} 
         setActiveTab={(tab) => {
           setActiveTab(tab);
-          setIsSidebarOpen(false); // Close sidebar on mobile when navigating
+          setIsSidebarOpen(false);
         }} 
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}

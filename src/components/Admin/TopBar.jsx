@@ -1,20 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
 import { 
-  Search, 
-  Moon, 
-  Bell, 
-  MessageSquare, 
-  Maximize, 
-  LayoutGrid, 
-  ChevronDown,
   Eye,
-  Menu
+  Menu,
+  LogOut
 } from 'lucide-react';
+import { logout } from '../../redux/slices/authSlice';
 import './AdminStyles.css';
 
 const TopBar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+
   return (
     <div className="admin-topbar">
       <div className="topbar-left" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -25,73 +25,42 @@ const TopBar = ({ isSidebarOpen, setIsSidebarOpen }) => {
         >
           <Menu size={24} />
         </button>
-        <div className="search-container">
-          <Search size={18} color="var(--admin-text-muted)" />
-          <input type="text" placeholder="Search" className="search-input" />
-        </div>
       </div>
       
       <div className="topbar-right">
         <div className="topbar-actions">
-          {/* Direct client storefront shortcut */}
           <button 
             onClick={() => navigate('/')}
-            title="Switch to Client Storefront"
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '6px', 
-              padding: '6px 14px', 
-              borderRadius: '30px', 
-              background: 'linear-gradient(135deg, #2563eb, #7c3aed)', 
-              color: 'white', 
-              border: 'none', 
-              cursor: 'pointer', 
-              fontWeight: 600, 
-              fontSize: '13px',
-              marginRight: '8px',
-              boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)',
-              transition: 'transform 0.2s'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
-            onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+            title="View Storefront"
+            className="admin-storefront-btn"
           >
             <Eye size={15} />
             <span>Storefront</span>
           </button>
-
-          <div className="action-item">
-            <img src="https://flagcdn.com/w20/gb.png" alt="EN" className="lang-flag" />
-          </div>
-          <button className="action-item">
-            <Moon size={20} />
-          </button>
-          <button className="action-item relative">
-            <Bell size={20} />
-            <span className="notification-badge">1</span>
-          </button>
-          <button className="action-item relative">
-            <MessageSquare size={20} />
-            <span className="notification-badge">1</span>
-          </button>
-          <button className="action-item">
-            <Maximize size={20} />
-          </button>
-          <button className="action-item">
-            <LayoutGrid size={20} />
-          </button>
         </div>
-        
-        <div className="user-profile">
+
+        {/* User Profile */}
+        <div className="user-profile" style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setShowProfileDropdown(!showProfileDropdown)}>
           <div className="user-info">
-            <span className="user-name">Kristin Watson</span>
-            <span className="user-role">Sale Administrator</span>
+            <span className="user-name">{user?.name || 'Admin'}</span>
+            <span className="user-role">{user?.email || 'Administrator'}</span>
           </div>
           <img 
-            src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop" 
-            alt="User" 
+            src={`https://ui-avatars.com/api/?name=${user?.name || 'Admin'}&background=7c3aed&color=fff&size=100`} 
+            alt={user?.name || 'User'} 
             className="user-avatar" 
           />
+          
+          {showProfileDropdown && (
+            <div className="admin-profile-dropdown">
+              <button 
+                onClick={() => { dispatch(logout()); setShowProfileDropdown(false); }}
+                className="admin-logout-btn"
+              >
+                <LogOut size={16} /> Logout
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

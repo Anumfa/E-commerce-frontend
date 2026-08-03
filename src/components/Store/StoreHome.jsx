@@ -1,8 +1,10 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Link } from 'react-router-dom';
 import { fetchProducts } from '../../redux/slices/productSlice';
+import { fetchCategories } from '../../redux/slices/categorySlice';
 import { fetchBanners } from '../../redux/slices/bannerSlice';
+import { fetchApprovedReviews } from '../../redux/slices/reviewSlice';
 import StoreNavbar from './StoreNavbar';
 import StoreBanner from './StoreBanner';
 import ProductCard from './ProductCard';
@@ -13,7 +15,7 @@ import ContactPage from './ContactPage';
 import AboutUsPage from './AboutUsPage';
 import ShopPage from './ShopPage';
 import CategoriesPage from './CategoriesPage';
-import AccountPage from './AccountPage';
+import AuthModal from './AuthModal';
 import FavoritesPage from './FavoritesPage';
 import CartPage from './CartPage';
 import CheckoutPage from './CheckoutPage';
@@ -221,106 +223,57 @@ const MOCK_FEATURED_PRODUCTS = [
   }
 ];
 
-// Initial Customer Reviews for Store Layout completeness
-const DEFAULT_REVIEWS = [
-  {
-    _id: 'rev-1',
-    name: 'Watson Watson',
-    rating: 5,
-    comment: 'The AeroFit smartwatch is absolutely phenomenal! The screen resolution is extremely sharp, custom step counters work beautifully, and the battery genuinely lasts for days. Best purchase I have made in a while.',
-    date: 'May 10, 2026'
-  },
-  {
-    _id: 'rev-2',
-    name: 'Eleanor Vance',
-    rating: 4,
-    comment: 'Sound signatures on the Apex headphones are deeply warm and beautiful. Perfect ANC for studying at cafes. My only minor critique is that the clamping force is slightly tight initially, but it loosens up nicely over a week.',
-    date: 'Apr 28, 2026'
-  },
-  {
-    _id: 'rev-3',
-    name: 'Marcus Brody',
-    rating: 5,
-    comment: 'Extremely fast shipping! Packaged beautifully. The EchoSphere speaker has a really heavy, premium metal chassis that looks gorgeous on my minimalist desk. Sound is incredibly clean even at high volumes.',
-    date: 'Apr 15, 2026'
-  }
-];
-
 const StoreHome = () => {
   const dispatch = useDispatch();
   const { items: products, loading: productsLoading } = useSelector((state) => state.product);
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { approvedItems: approvedReviews } = useSelector((state) => state.review);
 
   const [reviews, setReviews] = React.useState([]);
   const [isModalOpen, setModalOpen] = React.useState(false);
+  const [isAuthModalOpen, setAuthModalOpen] = React.useState(false);
 
   // Fetch items from backend API on mount
   useEffect(() => {
     dispatch(fetchProducts());
+    dispatch(fetchCategories());
     dispatch(fetchBanners());
-
-    // Load local reviews
-    const stored = localStorage.getItem('ecovibe_user_reviews');
-    if (stored) {
-      try {
-        setReviews(JSON.parse(stored));
-      } catch (e) {
-        setReviews(DEFAULT_REVIEWS);
-      }
-    } else {
-      setReviews(DEFAULT_REVIEWS);
-      localStorage.setItem('ecovibe_user_reviews', JSON.stringify(DEFAULT_REVIEWS));
-    }
+    dispatch(fetchApprovedReviews());
   }, [dispatch]);
 
-  // Handle adding new reviews
+  // Always use approved reviews from API (fully dynamic)
+  useEffect(() => {
+    if (approvedReviews) {
+      setReviews(approvedReviews);
+    }
+  }, [approvedReviews]);
+
+  // Handle adding new reviews (update local state immediately)
   const handleAddReview = (newReview) => {
-    const updated = [
-      {
-        _id: `user-rev-${Date.now()}`,
-        ...newReview
-      },
-      ...reviews
-    ];
-    setReviews(updated);
-    localStorage.setItem('ecovibe_user_reviews', JSON.stringify(updated));
+    // After submitting, refresh approved reviews from API
+    dispatch(fetchApprovedReviews());
   };
 
-  // Determine Best Products (2 rows of 4 = 8 products)
+  // Determine Best Products (2 rows of 4 = 8 products) - Dynamic from backend
   const getBestProducts = () => {
-    // If backend products exist, sort them (e.g. by discount percentage or just take the first 8)
     if (products && products.length > 0) {
-      // Find products that have discount prices, or fall back to standard list
       const sorted = [...products].sort((a, b) => {
         const discA = a.discountprice > 0 ? (a.price - a.discountprice) : 0;
         const discB = b.discountprice > 0 ? (b.price - b.discountprice) : 0;
-        return discB - discA; // show higher discounts first
+        return discB - discA;
       });
-
-      if (sorted.length >= 8) {
-        return sorted.slice(0, 8);
-      } else {
-        // Pad with mock items if we don't have enough
-        return [...sorted, ...MOCK_BEST_PRODUCTS.slice(sorted.length, 8)];
-      }
+      return sorted.slice(0, Math.min(sorted.length, 8));
     }
-    return MOCK_BEST_PRODUCTS;
+    return [];
   };
 
-  // Determine Featured Products (2 rows of 4 = 8 products)
+  // Determine Featured Products - Dynamic from backend
   const getFeaturedProducts = () => {
     if (products && products.length > 0) {
-      // We skip the first few products to avoid complete repetition, if possible
       const startIdx = products.length >= 12 ? 4 : 0;
-      const sliced = products.slice(startIdx, startIdx + 8);
-      
-      if (sliced.length >= 8) {
-        return sliced;
-      } else {
-        // Pad with mock featured items
-        return [...sliced, ...MOCK_FEATURED_PRODUCTS.slice(sliced.length, 8)];
-      }
+      return products.slice(startIdx, startIdx + Math.min(8, products.length - startIdx));
     }
-    return MOCK_FEATURED_PRODUCTS;
+    return [];
   };
 
   const bestProducts = getBestProducts();
@@ -329,13 +282,140 @@ const StoreHome = () => {
   return (
     <div className="store-body-wrapper">
       {/* 1. Navbar */}
-      <StoreNavbar />
+      <StoreNavbar onAuthClick={() => setAuthModalOpen(true)} />
 
       <Routes>
         <Route path="/" element={
           <>
             {/* 2. Hero Product Banner Carousel */}
             <StoreBanner />
+
+            {/* Welcome Card for Logged-in Users */}
+            {isAuthenticated && (
+              <div className="store-section-container" style={{ marginTop: '24px', marginBottom: '24px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%)',
+                  borderRadius: '24px',
+                  padding: '40px',
+                  color: '#ffffff',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  boxShadow: '0 20px 40px rgba(59, 130, 246, 0.25)',
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '24px'
+                }}
+                className="welcome-card-hover"
+                >
+                  {/* Decorative blurred circles for modern look */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '-50px',
+                    right: '-50px',
+                    width: '200px',
+                    height: '200px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    filter: 'blur(30px)',
+                    pointerEvents: 'none'
+                  }}></div>
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '-30px',
+                    left: '20%',
+                    width: '150px',
+                    height: '150px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    filter: 'blur(20px)',
+                    pointerEvents: 'none'
+                  }}></div>
+
+                  <div style={{ flex: '1 1 500px', zIndex: 1 }}>
+                    <span style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      padding: '6px 16px',
+                      borderRadius: '50px',
+                      fontSize: '13px',
+                      fontWeight: '700',
+                      textTransform: 'uppercase',
+                      letterSpacing: '1px',
+                      display: 'inline-block',
+                      marginBottom: '16px',
+                      backdropFilter: 'blur(4px)'
+                    }}>
+                      Member Account
+                    </span>
+                    <h2 style={{
+                      fontSize: '32px',
+                      fontWeight: '800',
+                      margin: '0 0 12px 0',
+                      letterSpacing: '-0.5px',
+                      textShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    }}>
+                      Welcome back, {user?.name || 'Valued Customer'}! 👋
+                    </h2>
+                    <p style={{
+                      fontSize: '16px',
+                      color: 'rgba(255, 255, 255, 0.9)',
+                      margin: 0,
+                      lineHeight: '1.6',
+                      maxWidth: '550px'
+                    }}>
+                      We are thrilled to have you back at <strong>EcoVibe</strong>. Check out your personalized recommendations, view items left in your cart, or jump straight into shopping the latest trends!
+                    </p>
+                  </div>
+
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '12px', 
+                    zIndex: 1, 
+                    flexWrap: 'wrap', 
+                    alignItems: 'center' 
+                  }}>
+                    <Link to="/shop" style={{ textDecoration: 'none' }}>
+                      <button style={{
+                        padding: '14px 28px',
+                        backgroundColor: '#ffffff',
+                        color: '#1e3a8a',
+                        border: 'none',
+                        borderRadius: '12px',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        boxShadow: '0 10px 20px rgba(0, 0, 0, 0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}
+                      className="welcome-card-btn-primary"
+                      >
+                        Explore Shop
+                      </button>
+                    </Link>
+
+                    <Link to="/cart" style={{ textDecoration: 'none' }}>
+                      <button style={{
+                        padding: '14px 28px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                        color: '#ffffff',
+                        border: '1px solid rgba(255, 255, 255, 0.3)',
+                        borderRadius: '12px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        backdropFilter: 'blur(4px)'
+                      }}
+                      className="welcome-card-btn-secondary"
+                      >
+                        View Cart
+                      </button>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* 3. Best Products (2 Rows = 8 items) */}
             <div className="store-section-container">
@@ -395,7 +475,7 @@ const StoreHome = () => {
         <Route path="/categories" element={<CategoriesPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/about" element={<AboutUsPage />} />
-        <Route path="/account" element={<AccountPage />} />
+        <Route path="/about" element={<AboutUsPage />} />
         <Route path="/favorites" element={<FavoritesPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
@@ -411,6 +491,12 @@ const StoreHome = () => {
         isOpen={isModalOpen} 
         onClose={() => setModalOpen(false)} 
         onSubmit={handleAddReview} 
+      />
+
+      {/* 8. Authentication Modal */}
+      <AuthModal 
+        isOpen={isAuthModalOpen}
+        onClose={() => setAuthModalOpen(false)}
       />
     </div>
   );

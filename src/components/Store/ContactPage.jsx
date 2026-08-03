@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   MapPin, 
   Phone, 
@@ -8,11 +9,16 @@ import {
   CheckCircle,
   HelpCircle,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Loader
 } from 'lucide-react';
+import axios from 'axios';
 import './StoreStyles.css';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:9000';
+
 const ContactPage = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -20,6 +26,8 @@ const ContactPage = () => {
     message: ''
   });
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const [activeFaq, setActiveFaq] = useState(null);
 
   const faqs = [
@@ -42,15 +50,25 @@ const ContactPage = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.name && formData.email && formData.message) {
-      // Simulate form submission
+    if (!formData.name || !formData.email || !formData.message) {
+      setError('Please fill in all required fields');
+      return;
+    }
+    setError('');
+    setSubmitting(true);
+    try {
+      await axios.post(`${API_BASE}/api/contact/create`, formData);
       setSubmitted(true);
+      setFormData({ name: '', email: '', subject: '', message: '' });
       setTimeout(() => {
         setSubmitted(false);
-        setFormData({ name: '', email: '', subject: '', message: '' });
       }, 5000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to send message. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -167,9 +185,17 @@ const ContactPage = () => {
                 ></textarea>
               </div>
 
-              <button type="submit" className="contact-submit-btn">
-                <span>Send Message</span>
-                <Send size={16} />
+              {error && (
+                <div className="contact-error-alert">
+                  <span>{error}</span>
+                </div>
+              )}
+              <button type="submit" className="contact-submit-btn" disabled={submitting}>
+                {submitting ? (
+                  <><Loader size={16} className="spinner" /> Sending...</>
+                ) : (
+                  <><span>Send Message</span><Send size={16} /></>
+                )}
               </button>
             </form>
           )}

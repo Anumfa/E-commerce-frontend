@@ -1,50 +1,31 @@
 import React from 'react';
 import { 
-  BarChart, 
   Bar, 
   XAxis, 
-  YAxis, 
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer, 
-  LineChart, 
   Line,
   ComposedChart,
   Cell
 } from 'recharts';
-import { ChevronDown, TrendingUp } from 'lucide-react';
 import './AdminStyles.css';
-
-const data = [
-  { name: 'Jan', revenue: 4000, orders: 2400 },
-  { name: 'Feb', revenue: 3000, orders: 1398 },
-  { name: 'Mar', revenue: 2000, orders: 9800 },
-  { name: 'Apr', revenue: 2780, orders: 3908 },
-  { name: 'May', revenue: 1890, orders: 4800 },
-  { name: 'Jun', revenue: 2390, orders: 3800 },
-  { name: 'Jul', revenue: 3490, orders: 4300 },
-  { name: 'Aug', revenue: 2000, orders: 2400 },
-  { name: 'Sep', revenue: 2780, orders: 3908 },
-  { name: 'Oct', revenue: 1890, orders: 4800 },
-  { name: 'Nov', revenue: 2390, orders: 3800 },
-  { name: 'Dec', revenue: 3490, orders: 4300 },
-];
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
       <div className="custom-tooltip">
-        <p className="tooltip-label">{label}, 2023</p>
+        <p className="tooltip-label">{label}</p>
         <div className="tooltip-items">
           <div className="tooltip-item">
             <span className="dot" style={{ backgroundColor: 'var(--admin-primary)' }}></span>
             <span className="label">Revenue:</span>
-            <span className="value">${payload[0].value.toLocaleString()}</span>
+            <span className="value">${payload[0]?.value?.toLocaleString() || 0}</span>
           </div>
           <div className="tooltip-item">
             <span className="dot" style={{ backgroundColor: 'var(--admin-purple)' }}></span>
             <span className="label">Orders:</span>
-            <span className="value">{payload[1].value.toLocaleString()}</span>
+            <span className="value">{payload[1]?.value?.toLocaleString() || 0}</span>
           </div>
         </div>
       </div>
@@ -53,17 +34,15 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-const RevenueChart = () => {
+const RevenueChart = ({ data = [] }) => {
+  const chartData = data.length > 0 ? data : [{ name: 'No Data', revenue: 0, orders: 0 }];
+  const totalRevenue = chartData.reduce((sum, d) => sum + (d.revenue || 0), 0);
+  const totalOrders = chartData.reduce((sum, d) => sum + (d.orders || 0), 0);
+
   return (
     <div className="chart-card revenue-card">
       <div className="chart-header">
         <h3 className="chart-title">Revenue</h3>
-        <div className="chart-actions">
-          <div className="period-selector">
-            <span>Yearly</span>
-            <ChevronDown size={14} />
-          </div>
-        </div>
       </div>
       
       <div className="revenue-stats">
@@ -73,32 +52,24 @@ const RevenueChart = () => {
             <span className="label">Revenue</span>
           </div>
           <div className="rev-stat-values">
-            <span className="value">$37,802</span>
-            <div className="trend">
-              <TrendingUp size={12} color="var(--admin-success)" />
-              <span className="pct">0.56%</span>
-            </div>
+            <span className="value">${totalRevenue.toLocaleString()}</span>
           </div>
         </div>
         
         <div className="rev-stat-item">
           <div className="rev-stat-info">
             <span className="dot" style={{ backgroundColor: 'var(--admin-purple)' }}></span>
-            <span className="label">Order</span>
+            <span className="label">Orders</span>
           </div>
           <div className="rev-stat-values">
-            <span className="value">$28,305</span>
-            <div className="trend">
-              <TrendingUp size={12} color="var(--admin-success)" />
-              <span className="pct">0.56%</span>
-            </div>
+            <span className="value">{totalOrders.toLocaleString()}</span>
           </div>
         </div>
       </div>
       
       <div className="chart-container-inner">
         <ResponsiveContainer width="100%" height={300}>
-          <ComposedChart data={data}>
+          <ComposedChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
             <XAxis 
               dataKey="name" 
@@ -114,8 +85,8 @@ const RevenueChart = () => {
               radius={[4, 4, 0, 0]} 
               barSize={12}
             >
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={index === 5 ? 'var(--admin-primary)' : 'rgba(255, 107, 0, 0.6)'} />
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={index % 2 === 0 ? 'var(--admin-primary)' : 'rgba(255, 107, 0, 0.6)'} />
               ))}
             </Bar>
             <Line 

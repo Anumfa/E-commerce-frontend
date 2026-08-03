@@ -76,7 +76,7 @@ const ReviewsSection = ({ reviews, onWriteReviewClick }) => {
                     </div>
                     <div>
                       <h4 className="store-review-name">{review.name}</h4>
-                      <span className="store-review-date">{review.date}</span>
+                      <span className="store-review-date">{review.date || (review.createdAt ? new Date(review.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '')}</span>
                     </div>
                   </div>
 

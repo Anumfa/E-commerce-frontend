@@ -321,3 +321,121 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   ULTIMATE RESPONSIVE FIXES (Product Detail page)
+   ========================================================================== */
+
+@media (max-width: 992px) {
+  .pd-container {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 0 16px;
+  }
+
+  .pd-gallery {
+    grid-template-columns: 1fr 1fr;
+    border-right: none;
+    border-bottom: 1px solid #eee;
+  }
+
+  .pd-info-sticky {
+    position: static;
+  }
+
+  .pd-info-wrapper {
+    padding: 20px 0 40px;
+  }
+
+  .pd-title {
+    font-size: 28px;
+  }
+
+  .pd-actions-row {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .pd-add-to-bag {
+    flex: 1;
+    min-width: 160px;
+  }
+}
+
+@media (max-width: 576px) {
+  .pd-gallery {
+    grid-template-columns: 1fr;
+  }
+
+  .pd-info-wrapper {
+    padding: 16px 0 32px;
+  }
+
+  .pd-title {
+    font-size: 24px;
+  }
+
+  .pd-price-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .pd-current-price {
+    font-size: 24px;
+  }
+
+  .pd-original-price {
+    font-size: 16px;
+  }
+
+  .pd-actions-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pd-quantity-selector {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pd-add-to-bag {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .pd-installments {
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+  }
+
+  .pd-breadcrumb {
+    padding: 16px;
+    font-size: 13px;
+  }
+
+  .pd-tabs {
+    gap: 8px;
+  }
+
+  .pd-tab {
+    font-size: 13px;
+    padding: 10px 14px;
+  }
+
+  .pd-share-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+/* Extra small phones */
+@media (max-width: 360px) {
+  .pd-gallery-item {
+    min-height: 160px;
+  }
+
+  .pd-title {
+    font-size: 21px;
+  }
+}

@@ -153,6 +153,100 @@ const CheckoutForm = ({ formData, handleChange, cartItems, subtotal, shippingFee
   );
 };
 
+const CODCheckoutForm = ({ formData, handleChange, cartItems, subtotal, shippingFee, totalPrice, isSubmitting, setIsSubmitting, error, setError, dispatch, navigate }) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const orderPayload = {
+        customerInfo: {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          city: formData.city
+        },
+        orderItems: cartItems.map(item => ({
+          product: item.product._id,
+          name: item.product.name,
+          quantity: item.quantity,
+          price: item.product.discountprice || item.product.price,
+          selectedColor: item.selectedColor,
+          selectedSize: item.selectedSize
+        })),
+        subtotal,
+        shippingFee,
+        totalPrice,
+        paymentMethod: 'Cash on Delivery',
+        paymentStatus: 'Pending'
+      };
+
+      const response = await axios.post(`${API_BASE}/api/order/create`, orderPayload);
+      
+      if (response.data.success) {
+        dispatch(clearCart());
+        navigate(`/order-confirmation/${response.data.data._id}`);
+      } else {
+        setError(response.data.message || 'Failed to place order');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Network error while placing order');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <label style={{ fontSize: '14px', fontWeight: '600', color: '#555' }}>Full Name</label>
+        <input type="text" name="name" required value={formData.name} onChange={handleChange} style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '15px' }} placeholder="John Doe" />
+      </div>
+
+      <div style={{ display: 'flex', gap: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+          <label style={{ fontSize: '14px', fontWeight: '600', color: '#555' }}>Email Address</label>
+          <input type="email" name="email" required value={formData.email} onChange={handleChange} style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '15px' }} placeholder="john@example.com" />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+          <label style={{ fontSize: '14px', fontWeight: '600', color: '#555' }}>Phone Number</label>
+          <input type="text" name="phone" required value={formData.phone} onChange={handleChange} style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '15px' }} placeholder="0300 1234567" />
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <label style={{ fontSize: '14px', fontWeight: '600', color: '#555' }}>Delivery Address</label>
+        <input type="text" name="address" required value={formData.address} onChange={handleChange} style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '15px' }} placeholder="House 123, Street 4, Block 5..." />
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <label style={{ fontSize: '14px', fontWeight: '600', color: '#555' }}>City</label>
+        <input type="text" name="city" required value={formData.city} onChange={handleChange} style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '15px' }} placeholder="Karachi" />
+        <span style={{ fontSize: '12px', color: '#888' }}>*Delivery Charges: Karachi Rs. 300 / Other Cities Rs. 400</span>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <label style={{ fontSize: '14px', fontWeight: '600', color: '#555' }}>Payment Method</label>
+        <select name="paymentMethod" value="Cash on Delivery" disabled style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '15px', backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}>
+          <option value="Cash on Delivery">Cash on Delivery (Credit Card Offline)</option>
+        </select>
+        <span style={{ fontSize: '12px', color: '#c53030' }}>*Credit Card option is unavailable because payment services could not be loaded. Check your internet connection.</span>
+      </div>
+
+      <button 
+        type="submit" 
+        disabled={isSubmitting}
+        style={{ marginTop: '16px', padding: '16px', backgroundColor: '#111', color: 'white', border: 'none', borderRadius: '10px', fontSize: '16px', fontWeight: 'bold', cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+      >
+        {isSubmitting ? 'Processing Order...' : 'Place Order'}
+      </button>
+    </form>
+  );
+};
+
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -169,13 +263,25 @@ const CheckoutPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [stripePromise, setStripePromise] = useState(null);
+  const [stripeError, setStripeError] = useState(false);
 
   useEffect(() => {
     const fetchConfig = async () => {
       try {
         const { data } = await axios.get(`${API_BASE}/api/payment/config`);
         if (data.publishableKey) {
-          setStripePromise(loadStripe(data.publishableKey));
+          const promise = loadStripe(data.publishableKey);
+          promise.then(stripeInstance => {
+            if (!stripeInstance) {
+              setStripeError(true);
+              setError('Failed to initialize Stripe payment gateway.');
+            }
+          }).catch(err => {
+            console.error('Failed to load Stripe.js script', err);
+            setStripeError(true);
+            setError('Failed to load payment security scripts. Please check your network connection.');
+          });
+          setStripePromise(promise);
         } else {
           setError('Backend did not provide a Stripe Publishable Key. Please restart your backend server.');
         }
@@ -216,7 +322,7 @@ const CheckoutPage = () => {
       <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '40px' }}>
         <div style={{ backgroundColor: '#fff', padding: '32px', borderRadius: '16px', border: '1px solid #eee' }}>
           <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '24px' }}>Delivery Information</h2>
-          {stripePromise ? (
+          {stripePromise && !stripeError ? (
             <Elements stripe={stripePromise}>
               <CheckoutForm 
                 formData={formData} 
@@ -233,6 +339,21 @@ const CheckoutPage = () => {
                 navigate={navigate}
               />
             </Elements>
+          ) : stripeError ? (
+            <CODCheckoutForm 
+              formData={formData} 
+              handleChange={handleChange}
+              cartItems={cartItems}
+              subtotal={subtotal}
+              shippingFee={shippingFee}
+              totalPrice={totalPrice}
+              isSubmitting={isSubmitting}
+              setIsSubmitting={setIsSubmitting}
+              error={error}
+              setError={setError}
+              dispatch={dispatch}
+              navigate={navigate}
+            />
           ) : (
             <p>Loading payment methods...</p>
           )}

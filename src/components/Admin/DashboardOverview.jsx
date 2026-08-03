@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ShoppingBag, 
   DollarSign, 
   Users, 
+  Package,
   Activity 
 } from 'lucide-react';
+import axios from 'axios';
 import StatCard from './StatCard';
 import RevenueChart from './RevenueChart';
 import PromotionalSalesChart from './PromotionalSalesChart';
@@ -13,25 +15,33 @@ import TopSaleList from './TopSaleList';
 import UserLocationMap from './UserLocationMap';
 import './AdminStyles.css';
 
-// Mock chart data for stat cards
-const salesChartData = [
-  { value: 400 }, { value: 600 }, { value: 500 }, 
-  { value: 700 }, { value: 900 }, { value: 800 }, { value: 1200 }
-];
-const ordersChartData = [
-  { value: 100 }, { value: 140 }, { value: 120 }, 
-  { value: 180 }, { value: 220 }, { value: 200 }, { value: 250 }
-];
-const usersChartData = [
-  { value: 3000 }, { value: 3200 }, { value: 3500 }, 
-  { value: 4000 }, { value: 4800 }, { value: 5200 }, { value: 7802 }
-];
-const conversionChartData = [
-  { value: 2.1 }, { value: 2.3 }, { value: 2.2 }, 
-  { value: 2.5 }, { value: 2.8 }, { value: 2.7 }, { value: 3.2 }
-];
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:9000';
 
 const DashboardOverview = () => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/api/dashboard/stats`);
+        setData(res.data.data);
+      } catch (err) {
+        console.error('Failed to fetch dashboard stats:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  if (loading) {
+    return <div className="dashboard-overview-wrapper"><div className="loading-spinner">Loading dashboard...</div></div>;
+  }
+
+  const { stats, recentOrders, topSales, revenueChart } = data || {};
+  const defaultChart = [{ value: 0 }];
+
   return (
     <div className="dashboard-overview-wrapper">
       {/* Welcome Header */}
@@ -45,55 +55,55 @@ const DashboardOverview = () => {
         <StatCard 
           icon={DollarSign} 
           label="Total Revenue" 
-          value="$37,802" 
-          change={12.4} 
+          value={`$${(stats?.totalRevenue || 0).toLocaleString()}`} 
+          change={0} 
           isPositive={true} 
-          chartData={salesChartData} 
+          chartData={defaultChart} 
           color="var(--admin-primary)" 
-          period="This Month"
+          period="All Time"
         />
         <StatCard 
           icon={ShoppingBag} 
           label="Total Orders" 
-          value="2,835" 
-          change={8.2} 
+          value={(stats?.totalOrders || 0).toLocaleString()} 
+          change={0} 
           isPositive={true} 
-          chartData={ordersChartData} 
+          chartData={defaultChart} 
           color="var(--admin-purple)" 
-          period="This Month"
+          period="All Time"
+        />
+        <StatCard 
+          icon={Package} 
+          label="Total Products" 
+          value={(stats?.totalProducts || 0).toLocaleString()} 
+          change={0} 
+          isPositive={true} 
+          chartData={defaultChart} 
+          color="var(--admin-warning)" 
+          period="All Time"
         />
         <StatCard 
           icon={Users} 
-          label="Active Visitors" 
-          value="7,802" 
-          change={5.6} 
+          label="Total Users" 
+          value={(stats?.totalUsers || 0).toLocaleString()} 
+          change={0} 
           isPositive={true} 
-          chartData={usersChartData} 
+          chartData={defaultChart} 
           color="var(--admin-info)" 
-          period="Real-time"
-        />
-        <StatCard 
-          icon={Activity} 
-          label="Conversion Rate" 
-          value="3.2%" 
-          change={2.1} 
-          isPositive={false} 
-          chartData={conversionChartData} 
-          color="var(--admin-success)" 
-          period="This Week"
+          period="All Time"
         />
       </div>
 
       {/* Main Charts & Analytics Grid */}
       <div className="dashboard-charts-grid">
-        <RevenueChart />
+        <RevenueChart data={revenueChart || []} />
         <PromotionalSalesChart />
       </div>
 
       {/* Tables & Lists Grid */}
       <div className="dashboard-tables-grid">
-        <RecentOrdersTable />
-        <TopSaleList />
+        <RecentOrdersTable orders={recentOrders || []} />
+        <TopSaleList sales={topSales || []} />
       </div>
 
       {/* Location Map View */}

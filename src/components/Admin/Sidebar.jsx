@@ -7,6 +7,9 @@ import {
   Image,
   Eye,
   LayoutDashboard,
+  ClipboardList,
+  MessageSquare,
+  Phone,
   X
 } from 'lucide-react';
 import './AdminStyles.css';
@@ -71,10 +74,28 @@ const Sidebar = ({ activeTab, setActiveTab, isSidebarOpen, setIsSidebarOpen }) =
           onClick={() => setActiveTab('category')}
         />
         <SidebarItem 
+          icon={ClipboardList} 
+          label="Orders" 
+          active={activeTab === 'orders'} 
+          onClick={() => setActiveTab('orders')}
+        />
+        <SidebarItem 
           icon={Image} 
           label="Banner" 
           active={activeTab === 'banner'} 
           onClick={() => setActiveTab('banner')}
+        />
+        <SidebarItem 
+          icon={MessageSquare} 
+          label="Reviews" 
+          active={activeTab === 'reviews'} 
+          onClick={() => setActiveTab('reviews')}
+        />
+        <SidebarItem 
+          icon={Phone} 
+          label="Contacts" 
+          active={activeTab === 'contacts'} 
+          onClick={() => setActiveTab('contacts')}
         />
         <SidebarItem 
           icon={Eye} 

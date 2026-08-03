@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Star, AlertCircle } from 'lucide-react';
+import { X, Star, AlertCircle, Loader, CheckCircle } from 'lucide-react';
+import axios from 'axios';
 import './StoreStyles.css';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:9000';
 
 const ReviewModal = ({ isOpen, onClose, onSubmit }) => {
   const [name, setName] = useState('');
@@ -9,8 +12,10 @@ const ReviewModal = ({ isOpen, onClose, onSubmit }) => {
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!name.trim()) {
@@ -27,22 +32,29 @@ const ReviewModal = ({ isOpen, onClose, onSubmit }) => {
     }
 
     setError('');
-    onSubmit({
-      name: name.trim(),
-      rating,
-      comment: comment.trim(),
-      date: new Date().toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      })
-    });
+    setSubmitting(true);
 
-    // Reset Form
-    setName('');
-    setRating(0);
-    setComment('');
-    onClose();
+    try {
+      await axios.post(`${API_BASE}/api/review/create`, {
+        name: name.trim(),
+        rating,
+        comment: comment.trim()
+      });
+
+      setSuccess(true);
+      setTimeout(() => {
+        // Reset Form
+        setName('');
+        setRating(0);
+        setComment('');
+        setSuccess(false);
+        onClose();
+      }, 1500);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to submit review. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -129,10 +141,21 @@ const ReviewModal = ({ isOpen, onClose, onSubmit }) => {
                 </div>
               )}
 
-              {/* Submit Button */}
-              <button type="submit" className="store-form-submit-btn">
-                <span>Submit My Review</span>
-              </button>
+              {success ? (
+                <div className="store-form-success">
+                  <CheckCircle size={20} />
+                  <span>Review submitted! Awaiting approval.</span>
+                </div>
+              ) : (
+                /* Submit Button */
+                <button type="submit" className="store-form-submit-btn" disabled={submitting}>
+                  {submitting ? (
+                    <><Loader size={18} className="spinner" /> Submitting...</>
+                  ) : (
+                    <span>Submit My Review</span>
+                  )}
+                </button>
+              )}
             </form>
           </motion.div>
         </div>
