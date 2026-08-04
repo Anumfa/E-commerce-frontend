@@ -22,8 +22,10 @@ build
 .env.*.local
 .env.development
 .env.test
-.env.production
 !.env.example
+
+# .env.production is committed intentionally - it contains only PUBLIC values
+# (backend API URL + public Google Client ID) so Vercel builds use the live API.
 
 # Editor directories and files
 .vscode/*
