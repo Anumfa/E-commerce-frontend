@@ -9,8 +9,12 @@ const CategoriesPage = () => {
   const { items: categories, loading } = useSelector((state) => state.category);
 
   useEffect(() => {
-    dispatch(fetchCategories());
-  }, [dispatch]);
+    // Only fetch when the store has no categories yet, so navigating back to
+    // this page does not re-fire a slow network request every time.
+    if (categories.length === 0 && !loading) {
+      dispatch(fetchCategories());
+    }
+  }, [dispatch, categories.length, loading]);
 
   return (
     <div className="categories-page-container">
@@ -40,7 +44,7 @@ const CategoriesPage = () => {
                   {category.subcategories.map((sub, idx) => (
                     <Link to={`/shop`} key={idx} className="subcat-card">
                       <div className="subcat-image-wrapper">
-                        <img src={category.imageUrl} alt={sub} />
+                        <img src={category.imageUrl} alt={sub} loading="lazy" decoding="async" />
                       </div>
                       <div className="subcat-info">
                         <h3>{sub}</h3>

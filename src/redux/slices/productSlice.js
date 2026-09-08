@@ -4,9 +4,17 @@ import axios from 'axios';
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:9000';
 const API_URL = `${API_BASE}/api/product`;
 
+// In-flight request cache: if fetchProducts is called multiple times while a
+// request is already running (e.g. React StrictMode double effects), all callers
+// share the SAME request instead of firing duplicate slow API calls.
+let productsInFlight = null;
 export const fetchProducts = createAsyncThunk('product/fetchAll', async () => {
-  const response = await axios.get(`${API_URL}/all`);
-  return response.data.data;
+  if (!productsInFlight) {
+    productsInFlight = axios.get(`${API_URL}/all`)
+      .then((res) => res.data.data)
+      .finally(() => { productsInFlight = null; });
+  }
+  return productsInFlight;
 });
 
 export const createProduct = createAsyncThunk('product/create', async (formData, { rejectWithValue }) => {

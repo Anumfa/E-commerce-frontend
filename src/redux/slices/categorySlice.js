@@ -4,9 +4,15 @@ import axios from 'axios';
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:9000';
 const API_URL = `${API_BASE}/api/category`;
 
+// In-flight request cache to deduplicate concurrent fetchCategories calls
+let categoriesInFlight = null;
 export const fetchCategories = createAsyncThunk('category/fetchAll', async () => {
-  const response = await axios.get(`${API_URL}/all`);
-  return response.data.data;
+  if (!categoriesInFlight) {
+    categoriesInFlight = axios.get(`${API_URL}/all`)
+      .then((res) => res.data.data)
+      .finally(() => { categoriesInFlight = null; });
+  }
+  return categoriesInFlight;
 });
 
 export const createCategory = createAsyncThunk('category/create', async (formData, { rejectWithValue }) => {

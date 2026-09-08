@@ -4,9 +4,15 @@ import axios from 'axios';
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:9000';
 const API_URL = `${API_BASE}/api/banner`;
 
+// In-flight request cache to deduplicate concurrent fetchBanners calls
+let bannersInFlight = null;
 export const fetchBanners = createAsyncThunk('banner/fetchAll', async () => {
-  const response = await axios.get(`${API_URL}/all`);
-  return response.data.data;
+  if (!bannersInFlight) {
+    bannersInFlight = axios.get(`${API_URL}/all`)
+      .then((res) => res.data.data)
+      .finally(() => { bannersInFlight = null; });
+  }
+  return bannersInFlight;
 });
 
 export const createBanner = createAsyncThunk('banner/create', async (formData, { rejectWithValue }) => {

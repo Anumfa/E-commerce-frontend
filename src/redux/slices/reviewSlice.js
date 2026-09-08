@@ -9,9 +9,15 @@ export const fetchReviews = createAsyncThunk('review/fetchAll', async () => {
   return response.data.data;
 });
 
+// In-flight request cache to deduplicate concurrent fetchApprovedReviews calls
+let approvedReviewsInFlight = null;
 export const fetchApprovedReviews = createAsyncThunk('review/fetchApproved', async () => {
-  const response = await axios.get(`${API_URL}/approved`);
-  return response.data.data;
+  if (!approvedReviewsInFlight) {
+    approvedReviewsInFlight = axios.get(`${API_URL}/approved`)
+      .then((res) => res.data.data)
+      .finally(() => { approvedReviewsInFlight = null; });
+  }
+  return approvedReviewsInFlight;
 });
 
 export const createReview = createAsyncThunk('review/create', async (reviewData, { rejectWithValue }) => {

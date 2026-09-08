@@ -3291,3 +3291,52 @@ img {
     justify-content: center;
   }
 }
+
+/* ==========================================================================
+   CART + CHECKOUT RESPONSIVE LAYOUTS
+   ========================================================================== */
+.cart-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.checkout-layout {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.checkout-form-row {
+  display: flex;
+  gap: 20px;
+}
+
+/* Stack cart & checkout into a single column on tablet / mobile */
+@media (max-width: 900px) {
+  .cart-layout,
+  .checkout-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Stack the side-by-side checkout input rows on small phones */
+@media (max-width: 520px) {
+  .checkout-form-row {
+    flex-direction: column;
+  }
+
+  /* Keep cart item rows usable on very small screens */
+  .cart-item-row {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 400px) {
+  .cart-item-thumb {
+    width: 84px !important;
+    height: 84px !important;
+  }
+}

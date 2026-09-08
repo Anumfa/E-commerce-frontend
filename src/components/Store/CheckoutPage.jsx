@@ -105,7 +105,7 @@ const CheckoutForm = ({ formData, handleChange, cartItems, subtotal, shippingFee
         <input type="text" name="name" required value={formData.name} onChange={handleChange} style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '15px' }} placeholder="John Doe" />
       </div>
 
-      <div style={{ display: 'flex', gap: '20px' }}>
+      <div className="checkout-form-row">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
           <label style={{ fontSize: '14px', fontWeight: '600', color: '#555' }}>Email Address</label>
           <input type="email" name="email" required value={formData.email} onChange={handleChange} style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '15px' }} placeholder="john@example.com" />
@@ -206,7 +206,7 @@ const CODCheckoutForm = ({ formData, handleChange, cartItems, subtotal, shipping
         <input type="text" name="name" required value={formData.name} onChange={handleChange} style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '15px' }} placeholder="John Doe" />
       </div>
 
-      <div style={{ display: 'flex', gap: '20px' }}>
+      <div className="checkout-form-row">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
           <label style={{ fontSize: '14px', fontWeight: '600', color: '#555' }}>Email Address</label>
           <input type="email" name="email" required value={formData.email} onChange={handleChange} style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '15px' }} placeholder="john@example.com" />
@@ -319,7 +319,7 @@ const CheckoutPage = () => {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '40px' }}>
+      <div className="checkout-layout">
         <div style={{ backgroundColor: '#fff', padding: '32px', borderRadius: '16px', border: '1px solid #eee' }}>
           <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '24px' }}>Delivery Information</h2>
           {stripePromise && !stripeError ? (

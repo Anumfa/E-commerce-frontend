@@ -82,6 +82,8 @@ const ProductCard = ({ product }) => {
           src={displayImage} 
           alt={name} 
           className="store-product-img" 
+          loading="lazy" 
+          decoding="async" 
           onError={(e) => {
             e.target.src = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&fit=crop';
           }}

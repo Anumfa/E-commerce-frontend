@@ -100,6 +100,8 @@ const StoreBanner = () => {
                 src={slide.imageUrl} 
                 alt={slide.title} 
                 className="store-banner-img" 
+                loading={index === 0 ? 'eager' : 'lazy'} 
+                decoding="async" 
                 onError={(e) => {
                   e.target.src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&fit=crop';
                 }}

@@ -20,7 +20,7 @@ const MOCK_PRODUCTS = [
 const ShopPage = () => {
   const dispatch = useDispatch();
   const { items: products, loading } = useSelector((state) => state.product);
-  const { items: categories } = useSelector((state) => state.category);
+  const { items: categories, loading: categoriesLoading } = useSelector((state) => state.category);
   const [activeCategory, setActiveCategory] = useState(null);
   const [activeSubcategory, setActiveSubcategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,8 +28,12 @@ const ShopPage = () => {
   const [sortBy, setSortBy] = useState('featured');
 
   useEffect(() => {
-    dispatch(fetchCategories());
-  }, [dispatch]);
+    // Only fetch when the store has no categories yet, so navigating back to
+    // Shop does not re-fire a slow network request every time.
+    if (categories.length === 0 && !categoriesLoading) {
+      dispatch(fetchCategories());
+    }
+  }, [dispatch, categories.length, categoriesLoading]);
 
   // Filter and sort products
   const filteredAndSortedProducts = useMemo(() => {
@@ -152,7 +156,7 @@ const ShopPage = () => {
                     className="shop-category-card"
                     onClick={() => setActiveSubcategory(sub)}
                   >
-                    <img src={activeCategory.imageUrl} alt={sub} className="shop-category-image" />
+                    <img src={activeCategory.imageUrl} alt={sub} className="shop-category-image" loading="lazy" decoding="async" />
                     <div className="shop-category-overlay">
                       <h3 style={{ fontSize: '16px' }}>{sub}</h3>
                     </div>
@@ -173,7 +177,7 @@ const ShopPage = () => {
                     className="shop-category-card"
                     onClick={() => setActiveCategory(cat)}
                   >
-                    <img src={cat.imageUrl} alt={cat.name} className="shop-category-image" />
+                    <img src={cat.imageUrl} alt={cat.name} className="shop-category-image" loading="lazy" decoding="async" />
                     <div className="shop-category-overlay">
                       <h3 style={{ fontSize: '16px' }}>{cat.name}</h3>
                     </div>

@@ -66,7 +66,7 @@ const ProductDetailPage = () => {
         <div className="pd-gallery">
           {galleryImages.map((img, idx) => (
             <div key={idx} className="pd-gallery-item">
-              <img src={img} alt={`${product.name} angle ${idx + 1}`} />
+              <img src={img} alt={`${product.name} angle ${idx + 1}`} loading={idx === 0 ? 'eager' : 'lazy'} decoding="async" />
             </div>
           ))}
         </div>

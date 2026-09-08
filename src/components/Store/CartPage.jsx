@@ -23,12 +23,12 @@ const CartPage = () => {
           <p style={{ color: '#666', marginTop: '8px' }}>Looks like you haven't added anything yet.</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '32px' }}>
+        <div className="cart-layout">
           {/* Cart Items List */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             {cartItems.map((item, idx) => (
-              <div key={idx} style={{ display: 'flex', gap: '20px', padding: '20px', backgroundColor: '#fff', borderRadius: '16px', border: '1px solid #eee' }}>
-                <img src={item.product.images[0]} alt={item.product.name} style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '10px' }} />
+              <div key={idx} className="cart-item-row" style={{ display: 'flex', gap: '20px', padding: '20px', backgroundColor: '#fff', borderRadius: '16px', border: '1px solid #eee' }}>
+                <img className="cart-item-thumb" src={item.product.images[0]} alt={item.product.name} style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '10px', flexShrink: 0 }} />
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <div>
                     <h3 style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 4px 0' }}>{item.product.name}</h3>
