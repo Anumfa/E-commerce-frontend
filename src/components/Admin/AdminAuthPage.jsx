@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser, registerUser, clearError } from '../../redux/slices/authSlice';
+import { isValidEmail, EMAIL_ERROR_MESSAGE } from '../../utils/validateEmail';
 import { User, Mail, Lock, Eye, EyeOff, LogIn, LayoutDashboard } from 'lucide-react';
 
 const AdminAuthPage = () => {
@@ -10,21 +11,45 @@ const AdminAuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
+  const [success, setSuccess] = useState('');
+  const [formError, setFormError] = useState('');
 
   useEffect(() => {
     dispatch(clearError());
   }, [isLogin, dispatch]);
 
   const handleChange = (e) => {
+    setFormError('');
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setSuccess('');
+
+    if (!isValidEmail(formData.email)) {
+      setFormError(EMAIL_ERROR_MESSAGE);
+      return;
+    }
+
+    if (!formData.password) {
+      setFormError('Please enter your password');
+      return;
+    }
+
+    setFormError('');
     if (isLogin) {
       dispatch(loginUser({ email: formData.email, password: formData.password }));
     } else {
-      dispatch(registerUser(formData));
+      try {
+        await dispatch(registerUser(formData)).unwrap();
+        // Registration done -> send the admin to the login form.
+        setFormData({ name: '', email: formData.email, password: '' });
+        setSuccess('Account created successfully! Please sign in to continue.');
+        setIsLogin(true);
+      } catch (err) {
+        // The error is already surfaced through the redux slice.
+      }
     }
   };
 
@@ -55,11 +80,15 @@ const AdminAuthPage = () => {
           </p>
         </div>
 
-        {error && (
-          <div className="auth-error">{error}</div>
+        {(formError || error) && (
+          <div className="auth-error">{formError || error}</div>
         )}
 
-        <form onSubmit={handleSubmit} className="auth-form">
+        {success && (
+          <div className="auth-success">{success}</div>
+        )}
+
+        <form onSubmit={handleSubmit} className="auth-form" noValidate>
           {!isLogin && (
             <div className="auth-field">
               <label>Full Name</label>
@@ -103,7 +132,7 @@ const AdminAuthPage = () => {
 
         <div className="auth-footer">
           <span>{isLogin ? "Don't have an account?" : 'Already have an account?'}</span>
-          <button className="auth-switch-btn" onClick={() => setIsLogin(!isLogin)}>
+          <button className="auth-switch-btn" onClick={() => { setSuccess(''); setFormError(''); setIsLogin(!isLogin); }}>
             {isLogin ? 'Create one here' : 'Log in here'}
           </button>
         </div>

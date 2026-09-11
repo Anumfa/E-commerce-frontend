@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { clearCart } from '../../redux/slices/cartSlice';
+import { getPricing } from '../../utils/pricing';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import './StoreStyles.css';
@@ -13,6 +14,31 @@ const CheckoutForm = ({ formData, handleChange, cartItems, subtotal, shippingFee
   const stripe = useStripe();
   const elements = useElements();
 
+  // Builds the payload sent to the orders API (reused for success + failure).
+  const buildOrderPayload = (paymentStatus, extra = {}) => ({
+    customerInfo: {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      address: formData.address,
+      city: formData.city
+    },
+    orderItems: cartItems.map(item => ({
+      product: item.product._id,
+      name: item.product.name,
+      quantity: item.quantity,
+      price: getPricing(item.product).finalPrice,
+      selectedColor: item.selectedColor,
+      selectedSize: item.selectedSize
+    })),
+    subtotal,
+    shippingFee,
+    totalPrice,
+    paymentMethod: formData.paymentMethod,
+    paymentStatus,
+    ...extra
+  });
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -20,7 +46,8 @@ const CheckoutForm = ({ formData, handleChange, cartItems, subtotal, shippingFee
 
     try {
       let paymentStatus = 'Pending';
-      
+      let transactionId = '';
+
       if (formData.paymentMethod === 'Credit Card') {
         if (!stripe || !elements) {
           setError("Stripe hasn't loaded yet.");
@@ -49,41 +76,36 @@ const CheckoutForm = ({ formData, handleChange, cartItems, subtotal, shippingFee
         });
 
         if (result.error) {
-          setError(result.error.message);
+          const failureReason = result.error.message || 'Card payment failed';
+          transactionId = result.error.payment_intent?.id || '';
+
+          // Record the failed transaction so the admin panel can list it
+          // separately from successful orders.
+          try {
+            await axios.post(
+              `${API_BASE}/api/order/create`,
+              buildOrderPayload('Failed', { transactionId, failureReason })
+            );
+          } catch (recordErr) {
+            console.error('Failed to record failed transaction:', recordErr);
+          }
+
+          setError(failureReason);
           setIsSubmitting(false);
           return;
         }
 
+        transactionId = result.paymentIntent?.id || '';
         if (result.paymentIntent.status === 'succeeded') {
           paymentStatus = 'Completed';
         }
       }
 
-      const orderPayload = {
-        customerInfo: {
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          address: formData.address,
-          city: formData.city
-        },
-        orderItems: cartItems.map(item => ({
-          product: item.product._id,
-          name: item.product.name,
-          quantity: item.quantity,
-          price: item.product.discountprice || item.product.price,
-          selectedColor: item.selectedColor,
-          selectedSize: item.selectedSize
-        })),
-        subtotal,
-        shippingFee,
-        totalPrice,
-        paymentMethod: formData.paymentMethod,
-        paymentStatus
-      };
+      const response = await axios.post(
+        `${API_BASE}/api/order/create`,
+        buildOrderPayload(paymentStatus, { transactionId })
+      );
 
-      const response = await axios.post(`${API_BASE}/api/order/create`, orderPayload);
-      
       if (response.data.success) {
         dispatch(clearCart());
         navigate(`/order-confirmation/${response.data.data._id}`);
@@ -172,7 +194,7 @@ const CODCheckoutForm = ({ formData, handleChange, cartItems, subtotal, shipping
           product: item.product._id,
           name: item.product.name,
           quantity: item.quantity,
-          price: item.product.discountprice || item.product.price,
+          price: getPricing(item.product).finalPrice,
           selectedColor: item.selectedColor,
           selectedSize: item.selectedSize
         })),
@@ -303,7 +325,7 @@ const CheckoutPage = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const subtotal = cartItems.reduce((acc, item) => acc + (item.product.discountprice || item.product.price) * item.quantity, 0);
+  const subtotal = cartItems.reduce((acc, item) => acc + getPricing(item.product).finalPrice * item.quantity, 0);
   const shippingFee = formData.city.toLowerCase().trim() === 'karachi' ? 300 : 400;
   const totalPrice = subtotal + shippingFee;
 
@@ -372,7 +394,7 @@ const CheckoutPage = () => {
                     <p style={{ margin: 0, color: '#888', fontSize: '12px' }}>Qty: {item.quantity}</p>
                   </div>
                 </div>
-                <span style={{ fontWeight: '600' }}>Rs. {(item.product.discountprice || item.product.price) * item.quantity}</span>
+                <span style={{ fontWeight: '600' }}>Rs. {getPricing(item.product).finalPrice * item.quantity}</span>
               </div>
             ))}
           </div>

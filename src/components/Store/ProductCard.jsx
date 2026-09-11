@@ -4,22 +4,20 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Star, Heart, Plus } from 'lucide-react';
 import { addToCart } from '../../redux/slices/cartSlice';
 import { toggleWishlist } from '../../redux/slices/wishlistSlice';
+import { getPricing } from '../../utils/pricing';
 import './StoreStyles.css';
 
 const ProductCard = ({ product }) => {
   const dispatch = useDispatch();
   const wishlistItems = useSelector((state) => state.wishlist.items);
   const isWishlisted = wishlistItems.some((item) => item._id === product._id);
-  const { name, description, price, discount, discountprice, images, ptype } = product;
+  const { name, images, ptype } = product;
 
   // Enforce image fallback
   const displayImage = images && images.length > 0 ? images[0] : 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&fit=crop';
 
-  // Calculate discount percentage if not explicit
-  let discountPercentage = discount;
-  if (!discountPercentage && price && discountprice) {
-    discountPercentage = Math.round(((price - discountprice) / price) * 100);
-  }
+  // Price after product discount OR category / subcategory sale.
+  const { price, finalPrice, discountPercent, hasDiscount } = getPricing(product);
 
   // Generate random rating for aesthetic completeness (or use a fixed value)
   const rating = product.rating || (3.5 + Math.random() * 1.5).toFixed(1);
@@ -57,8 +55,8 @@ const ProductCard = ({ product }) => {
       </svg>
 
       {/* Floating Badges */}
-      {discountPercentage > 0 ? (
-        <span className="store-product-badge discount">{discountPercentage}% OFF</span>
+      {discountPercent > 0 ? (
+        <span className="store-product-badge discount">{discountPercent}% OFF</span>
       ) : (
         <span className="store-product-badge">NEW</span>
       )}
@@ -106,10 +104,10 @@ const ProductCard = ({ product }) => {
         {/* Pricing & Add to Cart Row */}
         <div className="store-product-price-row">
           <div className="store-price-box">
-            {discountprice > 0 ? (
+            {hasDiscount ? (
               <>
                 <span className="store-original-price">${price}</span>
-                <span className="store-current-price discounted">${discountprice}</span>
+                <span className="store-current-price discounted">${finalPrice}</span>
               </>
             ) : (
               <span className="store-current-price">${price}</span>

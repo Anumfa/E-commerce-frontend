@@ -59,6 +59,20 @@ const AboutUsPage = () => {
         </p>
       </div>
 
+      {/* Hero Banner Image */}
+      <div className="about-hero-image">
+        <img
+          src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1600&q=80"
+          alt="The EcoVibe team designing premium sustainable essentials"
+          loading="eager"
+          decoding="async"
+        />
+        <div className="about-hero-image-badge">
+          <Sparkles size={16} />
+          <span>Crafted with care since 2021</span>
+        </div>
+      </div>
+
       {/* Brand Story Split Section */}
       <div className="about-split-section">
         <div className="about-split-image">

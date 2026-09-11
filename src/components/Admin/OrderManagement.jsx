@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Search, ChevronDown, ChevronUp, Package, MapPin, CreditCard, Phone, Mail, User, Truck } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, Package, MapPin, CreditCard, Phone, Mail, User, Truck, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
 import axios from 'axios';
 import './AdminStyles.css';
 
@@ -19,6 +19,7 @@ const OrderManagement = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedOrder, setExpandedOrder] = useState(null);
+  const [paymentFilter, setPaymentFilter] = useState('all');
 
   const fetchOrders = async () => {
     try {
@@ -46,11 +47,24 @@ const OrderManagement = () => {
     }
   };
 
-  const filteredOrders = orders.filter(order =>
-    order.customerInfo?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    order._id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    order.customerInfo?.email?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const paymentCounts = {
+    all: orders.length,
+    Failed: orders.filter(o => o.paymentStatus === 'Failed').length,
+    Completed: orders.filter(o => o.paymentStatus === 'Completed').length,
+    Pending: orders.filter(o => o.paymentStatus === 'Pending').length,
+  };
+
+  const filteredOrders = orders.filter(order => {
+    const q = searchQuery.toLowerCase();
+    const matchesSearch =
+      order.customerInfo?.name?.toLowerCase().includes(q) ||
+      order._id?.toLowerCase().includes(q) ||
+      order.customerInfo?.email?.toLowerCase().includes(q);
+
+    const matchesPayment = paymentFilter === 'all' || order.paymentStatus === paymentFilter;
+
+    return matchesSearch && matchesPayment;
+  });
 
   const toggleExpand = (orderId) => {
     setExpandedOrder(expandedOrder === orderId ? null : orderId);
@@ -74,6 +88,44 @@ const OrderManagement = () => {
         </div>
         <span className="order-count">{filteredOrders.length} orders</span>
       </div>
+
+      {/* Payment status filters - failed transactions get their own view */}
+      <div className="payment-filter-tabs">
+        <button
+          className={`payment-filter-tab ${paymentFilter === 'all' ? 'active' : ''}`}
+          onClick={() => setPaymentFilter('all')}
+        >
+          All Orders <span className="payment-filter-count">{paymentCounts.all}</span>
+        </button>
+        <button
+          className={`payment-filter-tab failed ${paymentFilter === 'Failed' ? 'active' : ''}`}
+          onClick={() => setPaymentFilter('Failed')}
+        >
+          <AlertTriangle size={14} /> Payment Failed <span className="payment-filter-count">{paymentCounts.Failed}</span>
+        </button>
+        <button
+          className={`payment-filter-tab completed ${paymentFilter === 'Completed' ? 'active' : ''}`}
+          onClick={() => setPaymentFilter('Completed')}
+        >
+          <CheckCircle2 size={14} /> Paid <span className="payment-filter-count">{paymentCounts.Completed}</span>
+        </button>
+        <button
+          className={`payment-filter-tab pending ${paymentFilter === 'Pending' ? 'active' : ''}`}
+          onClick={() => setPaymentFilter('Pending')}
+        >
+          <Clock size={14} /> Unpaid / COD <span className="payment-filter-count">{paymentCounts.Pending}</span>
+        </button>
+      </div>
+
+      {paymentFilter === 'all' && paymentCounts.Failed > 0 && (
+        <div className="payment-failed-banner" onClick={() => setPaymentFilter('Failed')}>
+          <AlertTriangle size={16} />
+          <span>
+            {paymentCounts.Failed} failed card payment{paymentCounts.Failed === 1 ? '' : 's'} need attention.
+            Click to view them.
+          </span>
+        </div>
+      )}
 
       {loading ? (
         <div className="loading-spinner">Loading orders...</div>
@@ -99,6 +151,11 @@ const OrderManagement = () => {
                   </div>
                   <div className="order-header-right">
                     <span className="order-total">${order.totalPrice}</span>
+                    {order.paymentStatus === 'Failed' && (
+                      <span className="payment-failed-badge">
+                        <AlertTriangle size={12} /> Payment Failed
+                      </span>
+                    )}
                     <span className="order-status-badge" style={{ backgroundColor: `${statusInfo.color}20`, color: statusInfo.color, border: `1px solid ${statusInfo.color}40` }}>
                       {statusInfo.label}
                     </span>
@@ -109,6 +166,16 @@ const OrderManagement = () => {
                 {/* Expanded Order Details */}
                 {isExpanded && (
                   <div className="order-card-body">
+                    {order.paymentStatus === 'Failed' && (
+                      <div className="order-payment-failed-note">
+                        <AlertTriangle size={16} />
+                        <span>
+                          This card payment failed, so the order is not confirmed.
+                          {order.failureReason ? ` Reason: ${order.failureReason}` : ''}
+                        </span>
+                      </div>
+                    )}
+
                     {/* Status Action Buttons */}
                     <div className="order-tracking">
                       <span className="tracking-label">Update Status:</span>
@@ -201,6 +268,22 @@ const OrderManagement = () => {
                           <div className="order-detail-row">
                             <span className="detail-label">Payment Status</span>
                             <span className={`detail-value payment-${order.paymentStatus?.toLowerCase()}`}>{order.paymentStatus}</span>
+                          </div>
+                          {order.transactionId && (
+                            <div className="order-detail-row">
+                              <span className="detail-label">Transaction ID</span>
+                              <span className="detail-value" style={{ wordBreak: 'break-all', fontSize: '12px' }}>{order.transactionId}</span>
+                            </div>
+                          )}
+                          {order.paymentStatus === 'Failed' && order.failureReason && (
+                            <div className="order-detail-row">
+                              <span className="detail-label">Failure Reason</span>
+                              <span className="detail-value payment-failed">{order.failureReason}</span>
+                            </div>
+                          )}
+                          <div className="order-detail-row">
+                            <span className="detail-label">Order Placed</span>
+                            <span className="detail-value">{new Date(order.createdAt).toLocaleString()}</span>
                           </div>
                           <div className="order-detail-row">
                             <span className="detail-label">Subtotal</span>

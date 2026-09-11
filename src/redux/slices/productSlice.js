@@ -44,6 +44,16 @@ export const deleteProduct = createAsyncThunk('product/delete', async (id) => {
   return id;
 });
 
+// Bulk update of sale discounts for products (Admin "Sale" page)
+export const updateProductDiscounts = createAsyncThunk('product/updateDiscounts', async (sales, { rejectWithValue }) => {
+  try {
+    const response = await axios.put(`${API_URL}/sale`, { sales });
+    return response.data.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message);
+  }
+});
+
 const productSlice = createSlice({
   name: 'product',
   initialState: {
@@ -72,6 +82,12 @@ const productSlice = createSlice({
       })
       .addCase(deleteProduct.fulfilled, (state, action) => {
         state.items = state.items.filter(item => item._id !== action.payload);
+      })
+      .addCase(updateProductDiscounts.fulfilled, (state, action) => {
+        (action.payload || []).forEach(updated => {
+          const index = state.items.findIndex(item => item._id === updated._id);
+          if (index !== -1) state.items[index] = updated;
+        });
       });
   },
 });

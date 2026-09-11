@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, Plus, Minus, ArrowRight, ArrowLeft } from 'lucide-react';
 import { updateQuantity, removeFromCart } from '../../redux/slices/cartSlice';
+import { getPricing } from '../../utils/pricing';
 import './StoreStyles.css';
 
 const CartPage = () => {
@@ -10,7 +11,7 @@ const CartPage = () => {
   const navigate = useNavigate();
   const cartItems = useSelector((state) => state.cart.items);
 
-  const subtotal = cartItems.reduce((acc, item) => acc + (item.product.discountprice || item.product.price) * item.quantity, 0);
+  const subtotal = cartItems.reduce((acc, item) => acc + getPricing(item.product).finalPrice * item.quantity, 0);
 
   return (
     <div className="store-page-container" style={{ padding: '40px 24px', maxWidth: '1200px', margin: '0 auto', marginTop: '80px', minHeight: '60vh' }}>
@@ -55,7 +56,7 @@ const CartPage = () => {
                       ><Plus size={14} /></button>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                      <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#d97706' }}>${(item.product.discountprice || item.product.price) * item.quantity}</span>
+                      <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#d97706' }}>${getPricing(item.product).finalPrice * item.quantity}</span>
                       <button 
                         onClick={() => dispatch(removeFromCart({ ...item, productId: item.product._id }))}
                         style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 

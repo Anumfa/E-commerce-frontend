@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchProducts } from '../../redux/slices/productSlice';
-import { Minus, Plus, MessageSquare } from 'lucide-react';
+import { getPricing } from '../../utils/pricing';
+import { Minus, Plus, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-react';
 import './StoreStyles.css';
 import './ProductDetail.css';
 
@@ -16,6 +17,7 @@ const ProductDetailPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('DETAILS');
   const [selectedColor, setSelectedColor] = useState('Black');
+  const [activeImage, setActiveImage] = useState(0);
 
   // Load product data
   useEffect(() => {
@@ -27,6 +29,11 @@ const ProductDetailPage = () => {
     }
   }, [id, products, dispatch]);
 
+  // Reset the image slider whenever a different product is opened.
+  useEffect(() => {
+    setActiveImage(0);
+  }, [id]);
+
   if (loading || (!product && products.length === 0)) {
     return <div className="store-page-loading">Loading product details...</div>;
   }
@@ -35,14 +42,17 @@ const ProductDetailPage = () => {
     return <div className="store-page-not-found">Product not found.</div>;
   }
 
+  // Price after product discount OR category / subcategory sale.
+  const { price, finalPrice, discountPercent, hasDiscount } = getPricing(product);
+
   const images = product.images && product.images.length > 0 
     ? product.images 
     : ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&fit=crop'];
 
-  // Pad images to create a gallery like the reference
-  const galleryImages = images.length < 4 
-    ? [...images, ...Array(4 - images.length).fill(images[0])] 
-    : images;
+  // Slider helpers (kept simple so the last image wraps to the first).
+  const safeImageIndex = Math.min(activeImage, images.length - 1);
+  const goToPrevImage = () => setActiveImage((i) => (i - 1 + images.length) % images.length);
+  const goToNextImage = () => setActiveImage((i) => (i + 1) % images.length);
 
   const handleAddToCart = () => {
     dispatch(addToCart({
@@ -62,13 +72,62 @@ const ProductDetailPage = () => {
       </div>
 
       <div className="pd-container">
-        {/* Left Side: Image Gallery Grid */}
-        <div className="pd-gallery">
-          {galleryImages.map((img, idx) => (
-            <div key={idx} className="pd-gallery-item">
-              <img src={img} alt={`${product.name} angle ${idx + 1}`} loading={idx === 0 ? 'eager' : 'lazy'} decoding="async" />
+        {/* Left Side: Image Slider */}
+        <div className="pd-gallery pd-slider">
+          <div className="pd-slider-stage">
+            <img
+              key={safeImageIndex}
+              src={images[safeImageIndex]}
+              alt={`${product.name} - image ${safeImageIndex + 1}`}
+              loading="eager"
+              decoding="async"
+            />
+
+            {images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  className="pd-slider-nav pd-slider-prev"
+                  onClick={goToPrevImage}
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft size={22} />
+                </button>
+                <button
+                  type="button"
+                  className="pd-slider-nav pd-slider-next"
+                  onClick={goToNextImage}
+                  aria-label="Next image"
+                >
+                  <ChevronRight size={22} />
+                </button>
+                <span className="pd-slider-counter">
+                  {safeImageIndex + 1} / {images.length}
+                </span>
+              </>
+            )}
+          </div>
+
+          {images.length > 1 && (
+            <div className="pd-slider-thumbs">
+              {images.map((img, idx) => (
+                <button
+                  type="button"
+                  key={idx}
+                  className={`pd-slider-thumb ${idx === safeImageIndex ? 'active' : ''}`}
+                  onClick={() => setActiveImage(idx)}
+                  aria-label={`View image ${idx + 1}`}
+                >
+                  <img
+                    src={img}
+                    alt={`${product.name} thumbnail ${idx + 1}`}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </button>
+              ))}
             </div>
-          ))}
+          )}
         </div>
 
         {/* Right Side: Sticky Details */}
@@ -78,13 +137,14 @@ const ProductDetailPage = () => {
             <p className="pd-sku">SKU: {product._id.substring(0, 14).toUpperCase()}</p>
             
             <div className="pd-price-row">
-              {product.discountprice > 0 ? (
+              {hasDiscount ? (
                 <>
-                  <span className="pd-original-price">Rs. {product.price}</span>
-                  <span className="pd-current-price">Rs. {product.discountprice}</span>
+                  <span className="pd-original-price">Rs. {price}</span>
+                  <span className="pd-current-price">Rs. {finalPrice}</span>
+                  <span className="pd-sale-tag">{discountPercent}% OFF</span>
                 </>
               ) : (
-                <span className="pd-current-price">Rs. {product.price}</span>
+                <span className="pd-current-price">Rs. {price}</span>
               )}
             </div>
 
@@ -110,7 +170,7 @@ const ProductDetailPage = () => {
 
             <div className="pd-installments">
               <span className="pd-badge">boodmay</span>
-              <span className="pd-installment-text">PAY IN 3 INSTALLMENTS OF <strong>RS. {Math.round((product.discountprice || product.price) / 3)}</strong></span>
+              <span className="pd-installment-text">PAY IN 3 INSTALLMENTS OF <strong>RS. {Math.round(finalPrice / 3)}</strong></span>
             </div>
 
             <div className="pd-tabs">

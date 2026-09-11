@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { GoogleLogin } from '@react-oauth/google';
 import { loginUser, registerUser, googleLogin, clearError } from '../../redux/slices/authSlice';
+import { isValidEmail, EMAIL_ERROR_MESSAGE } from '../../utils/validateEmail';
 import { X } from 'lucide-react';
 import './StoreStyles.css';
 
@@ -11,6 +12,7 @@ const AuthModal = ({ isOpen, onClose }) => {
   
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+  const [formError, setFormError] = useState('');
 
   // Clear errors when switching between login and signup
   useEffect(() => {
@@ -27,11 +29,24 @@ const AuthModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   const handleInputChange = (e) => {
+    setFormError('');
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (!isValidEmail(formData.email)) {
+      setFormError(EMAIL_ERROR_MESSAGE);
+      return;
+    }
+
+    if (!formData.password) {
+      setFormError('Please enter your password');
+      return;
+    }
+
+    setFormError('');
     if (isLogin) {
       dispatch(loginUser({ email: formData.email, password: formData.password }));
     } else {
@@ -44,6 +59,7 @@ const AuthModal = ({ isOpen, onClose }) => {
   };
 
   const switchMode = () => {
+    setFormError('');
     setIsLogin(!isLogin);
   };
 
@@ -71,13 +87,13 @@ const AuthModal = ({ isOpen, onClose }) => {
           {isLogin ? 'Welcome Back' : 'Create an Account'}
         </h2>
         
-        {error && (
+        {(formError || error) && (
           <div style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '10px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px', textAlign: 'center' }}>
-            {error}
+            {formError || error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {!isLogin && (
             <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <label style={{ fontSize: '14px', fontWeight: '500', color: '#555' }}>Full Name</label>

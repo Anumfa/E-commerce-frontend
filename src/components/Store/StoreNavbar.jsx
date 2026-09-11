@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { 
@@ -8,7 +8,14 @@ import {
   User, 
   LayoutDashboard,
   Menu,
-  X
+  X,
+  House,
+  Store,
+  LayoutGrid,
+  Info,
+  Phone,
+  LogIn,
+  LogOut
 } from 'lucide-react';
 import './StoreStyles.css';
 import { useDispatch } from 'react-redux';
@@ -27,6 +34,41 @@ const StoreNavbar = ({ onAuthClick }) => {
   const wishlistCount = wishlistItems.length;
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+
+  // Mobile drawer: close on Escape and lock background scrolling while open.
+  useEffect(() => {
+    if (!isMobileMenuOpen) return undefined;
+
+    const drawerQuery = window.matchMedia('(max-width: 900px)');
+    const previousOverflow = document.body.style.overflow;
+
+    if (drawerQuery.matches) {
+      document.body.style.overflow = 'hidden';
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setIsMobileMenuOpen(false);
+    };
+
+    // Release the lock if the viewport grows past the drawer breakpoint.
+    const handleViewportChange = (event) => {
+      if (event.matches) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = previousOverflow;
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    drawerQuery.addEventListener('change', handleViewportChange);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+      drawerQuery.removeEventListener('change', handleViewportChange);
+    };
+  }, [isMobileMenuOpen]);
 
   const handleAuthAction = () => {
     setIsProfileDropdownOpen(!isProfileDropdownOpen);
@@ -72,11 +114,36 @@ const StoreNavbar = ({ onAuthClick }) => {
           </li>
 
           <li className="store-drawer-label">Menu</li>
-          <li><Link to="/" className={`store-nav-link ${path === '/' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>Home</Link></li>
-          <li><Link to="/shop" className={`store-nav-link ${path === '/shop' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>Shop</Link></li>
-          <li><Link to="/categories" className={`store-nav-link ${path === '/categories' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>Categories</Link></li>
-          <li><Link to="/about" className={`store-nav-link ${path === '/about' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>About Us</Link></li>
-          <li><Link to="/contact" className={`store-nav-link ${path === '/contact' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>Contact</Link></li>
+          <li>
+            <Link to="/" className={`store-nav-link ${path === '/' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+              <House size={18} className="store-drawer-link-icon" />
+              <span>Home</span>
+            </Link>
+          </li>
+          <li>
+            <Link to="/shop" className={`store-nav-link ${path === '/shop' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+              <Store size={18} className="store-drawer-link-icon" />
+              <span>Shop</span>
+            </Link>
+          </li>
+          <li>
+            <Link to="/categories" className={`store-nav-link ${path === '/categories' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+              <LayoutGrid size={18} className="store-drawer-link-icon" />
+              <span>Categories</span>
+            </Link>
+          </li>
+          <li>
+            <Link to="/about" className={`store-nav-link ${path === '/about' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+              <Info size={18} className="store-drawer-link-icon" />
+              <span>About Us</span>
+            </Link>
+          </li>
+          <li>
+            <Link to="/contact" className={`store-nav-link ${path === '/contact' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+              <Phone size={18} className="store-drawer-link-icon" />
+              <span>Contact</span>
+            </Link>
+          </li>
 
           {/* Drawer quick actions (mobile only) */}
           <li className="store-drawer-divider"></li>
@@ -97,6 +164,47 @@ const StoreNavbar = ({ onAuthClick }) => {
             <Link to="/admin" className="store-drawer-action" onClick={() => setIsMobileMenuOpen(false)}>
               <LayoutDashboard size={18} /> Admin Portal
             </Link>
+          </li>
+
+          {/* Drawer account section (mobile only) */}
+          <li className="store-drawer-divider"></li>
+          <li className="store-drawer-account">
+            {isAuthenticated ? (
+              <>
+                <div className="store-drawer-user">
+                  <img
+                    src={`https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=7c3aed&color=fff&size=80`}
+                    alt={user?.name || 'User'}
+                    className="store-drawer-avatar"
+                  />
+                  <div className="store-drawer-user-info">
+                    <span className="store-drawer-user-name">{user?.name || 'User'}</span>
+                    <span className="store-drawer-user-email">{user?.email}</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="store-drawer-auth-btn logout"
+                  onClick={() => {
+                    dispatch(logout());
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  <LogOut size={16} /> Logout
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                className="store-drawer-auth-btn"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  if (onAuthClick) onAuthClick();
+                }}
+              >
+                <LogIn size={16} /> Sign In / Sign Up
+              </button>
+            )}
           </li>
         </ul>
 

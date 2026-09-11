@@ -38,6 +38,16 @@ export const deleteCategory = createAsyncThunk('category/delete', async (id) => 
   return id;
 });
 
+// Bulk update of sale / discount settings for categories
+export const updateSaleSettings = createAsyncThunk('category/updateSale', async (sales, { rejectWithValue }) => {
+  try {
+    const response = await axios.put(`${API_URL}/sale`, { sales });
+    return response.data.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message);
+  }
+});
+
 const categorySlice = createSlice({
   name: 'category',
   initialState: {
@@ -66,6 +76,12 @@ const categorySlice = createSlice({
       })
       .addCase(deleteCategory.fulfilled, (state, action) => {
         state.items = state.items.filter(item => item._id !== action.payload);
+      })
+      .addCase(updateSaleSettings.fulfilled, (state, action) => {
+        (action.payload || []).forEach(updated => {
+          const index = state.items.findIndex(item => item._id === updated._id);
+          if (index !== -1) state.items[index] = updated;
+        });
       });
   },
 });

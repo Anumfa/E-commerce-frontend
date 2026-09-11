@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser, registerUser, clearError } from '../../redux/slices/authSlice';
+import { isValidEmail, EMAIL_ERROR_MESSAGE } from '../../utils/validateEmail';
 import { X, User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
 const AdminAuthModal = ({ isOpen, onClose }) => {
@@ -10,6 +11,8 @@ const AdminAuthModal = ({ isOpen, onClose }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
+  const [success, setSuccess] = useState('');
+  const [formError, setFormError] = useState('');
 
   useEffect(() => {
     dispatch(clearError());
@@ -24,15 +27,37 @@ const AdminAuthModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   const handleChange = (e) => {
+    setFormError('');
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setSuccess('');
+
+    if (!isValidEmail(formData.email)) {
+      setFormError(EMAIL_ERROR_MESSAGE);
+      return;
+    }
+
+    if (!formData.password) {
+      setFormError('Please enter your password');
+      return;
+    }
+
+    setFormError('');
     if (isLogin) {
       dispatch(loginUser({ email: formData.email, password: formData.password }));
     } else {
-      dispatch(registerUser(formData));
+      try {
+        await dispatch(registerUser(formData)).unwrap();
+        // Registration done -> send the admin to the login form.
+        setFormData({ name: '', email: formData.email, password: '' });
+        setSuccess('Account created successfully! Please sign in to continue.');
+        setIsLogin(true);
+      } catch (err) {
+        // The error is already surfaced through the redux slice.
+      }
     }
   };
 
@@ -51,11 +76,15 @@ const AdminAuthModal = ({ isOpen, onClose }) => {
           <p>{isLogin ? 'Sign in to manage your store' : 'Register to manage your store'}</p>
         </div>
 
-        {error && (
-          <div className="admin-auth-error">{error}</div>
+        {(formError || error) && (
+          <div className="admin-auth-error">{formError || error}</div>
         )}
 
-        <form onSubmit={handleSubmit} className="admin-auth-form">
+        {success && (
+          <div className="admin-auth-success">{success}</div>
+        )}
+
+        <form onSubmit={handleSubmit} className="admin-auth-form" noValidate>
           {!isLogin && (
             <div className="admin-auth-field">
               <label>Full Name</label>
@@ -92,7 +121,7 @@ const AdminAuthModal = ({ isOpen, onClose }) => {
 
         <div className="admin-auth-footer">
           <span>{isLogin ? "Don't have an account?" : 'Already have an account?'}</span>
-          <button className="admin-auth-switch" onClick={() => setIsLogin(!isLogin)}>
+          <button className="admin-auth-switch" onClick={() => { setSuccess(''); setFormError(''); setIsLogin(!isLogin); }}>
             {isLogin ? 'Sign Up' : 'Sign In'}
           </button>
         </div>
